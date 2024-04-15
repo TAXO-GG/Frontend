@@ -1,0 +1,31 @@
+TAXOGG FRONTEND COPYRIGHT NOTICE
+Copyright (C) 2024 Manuel Martín Santamaría (alias manuelmsni)
+
+All rights reserved.
+
+1. Introduction
+This document sets forth the copyright policy for the TAXOGG Frontend repository, located at https://github.com/TAXO-GG/Frontend. The TAXOGG Frontend encompasses all visual interfaces, user interaction flows, and integrated design elements which facilitate user interaction with TAXOGG’s core services. It is a proprietary software crucial to the user experience and engagement with the TAXOGG ecosystem.
+
+2. Copyright Information
+The Frontend, including but not limited to its HTML, CSS, JavaScript, images, and other files, is the exclusive property of Manuel Martín Santamaría and is protected under copyright laws and international treaties, as well as other intellectual property laws and treaties.
+
+3. Restrictions
+The Frontend is proprietary software. Use, copying, modification, distribution, or disclosure of the Frontend or any part thereof, including, but not limited to, technical information, graphics, design elements, or code, are strictly prohibited except as expressly permitted by a written and signed agreement with Manuel Martín Santamaría. Without limiting the foregoing, the following are expressly prohibited unless expressly authorized in writing by Manuel Martín Santamaría:
+
+The use, copying, modification, or distribution of the Frontend or its parts for any purpose.
+The reverse engineering, disassembly, or decompilation of the Frontend to obtain source code.
+The removal of any copyright or proprietary notices on the Frontend or accompanying materials.
+
+4. Trademarks
+TAXOGG is a trademark of Manuel Martín Santamaría. This policy does not grant any license or right to use the TAXOGG trademark or any other trademarks, service marks, logos, or domain names associated with the Frontend.
+
+5. Warranty Disclaimer
+The Frontend is provided "as is", without warranty of any kind, express or implied. Manuel Martín Santamaría expressly disclaims all warranties, including but not limited to the implied warranties of merchantability and fitness for a particular purpose.
+
+6. Limitation of Liability
+Manuel Martín Santamaría shall not be liable for any direct, indirect, special, incidental, consequential, or punitive damages, including but not limited to loss of use, loss of profits, or loss of data, whether in an action in contract, tort (including but not limited to negligence), or otherwise arising out of or in any way connected with the use of or inability to use the Frontend or the materials contained in or accessed through the Frontend.
+
+7. Contact Information
+For authorization requests or any inquiries related to this copyright policy, please contact:
+
+manuelmsni@hotmail.com
