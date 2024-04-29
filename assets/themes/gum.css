@@ -1,0 +1,11 @@
+:root {
+    --bg-primary: white;
+    --bg-secondary: #EBEBEB;
+    --border-light: #00000045;
+    --border-dark: #00000096;
+    --color-primary: #BE9DDA;
+    --color-secondary: #67D1B6;
+    --text-primary: black;
+    --text-secondary: black;
+    --font-size: 16px;
+}
