@@ -1,66 +1,180 @@
-class Router{
+class Router {
 
-    current;
+    static instance;
 
-    constructor(){
+    url;
+    params;
+    currentParameters;
+
+    constructor() {
     }
 
-    init(){
-        var params = session.paramManager.getParams();
-        const countParams = Object.entries(params).length;
+    /**
+     * Inicializa la URL y los parámetros al cargar o recargar la página
+     */
+    initParams() { 
+        this.url = new URL(window.location.href);
+        this.params = this.url.searchParams;
+    }
+
+    static getInstance(){
+        if(Router.instance == null){
+            Router.instance = new Router();
+        }
+        Router.instance.initParams();
+        Router.instance.init();
+        return Router.instance;
+    }
+
+    /**
+     * Inicializa la ruta de la página basada en los parámetros URL
+     */
+    init() {
+        const params = this.getParams();
+        const countParams = Object.keys(params).length;
         if (countParams <= 0) {
-            session.goTo('home');
-            this.setCurrent(session.paramManager.getParams());
+            this.route({window: 'home'});
         } else {
             this.route(params);
         }
     }
 
-    setCurrent(params){
-        this.current = params;
+    /**
+     * Inicializa la ruta de la página basada en los parámetros URL
+     * @param {*} params 
+     * @returns 
+     */
+    route(params) {
+        if (this.currentParameters && this.areParamsEqual(params, this.currentParameters)) return;
+        let currentWindow = this.currentParameters ? this.currentParameters['window'] : null;
+        this.setCurrent(params);
+        if (params['window'] !== currentWindow) {
+            this.updateView(params['window']);
+        }
     }
 
-    async route(params){
-
-        var current = this.current;
-
-        var isCurrentNull = current == null;
-
-        if(!isCurrentNull){
-            if (params === current) return;
+    /**
+     * Actualiza la vista basada en la ventana especificada en los parámetros
+     * @param {*} view 
+     */
+    updateView(view) {
+        switch (view) {
+            case "home":
+                TabManager.getInstance().createTab('home', 2, {window: 'home'});
+                break;
+            case "taxons":
+                TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'});
+                break;
+            case "keys":
+                TabManager.getInstance().createTab('keys', 4, {window: 'keys'});
+                break;
+            case "id":
+                break;
+            case "community":
+                break;
+            default:
+                console.log("No view specified or view not recognized");
         }
-
-        this.current = params;
-
-        var currentWindow;
-        if(isCurrentNull) currentWindow = null; else currentWindow = current['window'];
-
-        if(params['window'] != currentWindow){
-            switch(params['window']){
-                case "home":
-                    session.tabManager.initHome();
-                    break;
-                case "classification":
-
-                    break;
-                case "keys":
-                    session.tabManager.initKeys();
-                    break;
-                case "id":
-
-                    break;
-                case "community":
-
-                    break;
-                default:
-                    return;
-            }
-        }
-
-        
     }
 
+    goTo(view){
+        this.clearParams();
+        this.setParam("window", view);
+    }
+
+    goToUrl(url){
+        url = new URL(url);
+        params = url.searchParams;
+        route(params);
+    }
+
+    /**
+     * Limpia los parámetros de la URL
+     */
+    clearParams(){
+        this.params = new URLSearchParams();
+        this.currentParameters = {};
+    }
+
+    getURL() {
+        return this.url.toString();
+    }
+
+    /**
+     * Actualiza la URL en la barra de direcciones con los parámetros actuales
+     */
+    setURL() {
+        this.url.search = this.params.toString();
+        window.history.pushState({}, '', this.getURL());
+    }
+
+    /**
+     * Obtiene los parámetros de la URL en un objeto JSON
+     * @returns Los parámetros de la URL en un objeto JSON
+     */
+    getParams() {
+        // Convierte los parámetros a un objeto JSON
+        const paramsObj = {};
+        this.params.forEach((value, key) => {
+            paramsObj[key] = value;
+        });
+        return paramsObj;
+    }
+
+    /**
+     * Obtiene un parámetro específico de la URL
+     * @param {*} param 
+     * @returns 
+     */
+    getParam(param) {
+        return this.params.get(param);
+    }
+
+    /**
+     * Establece un parámetro específico en la URL
+     * @param {*} param 
+     * @param {*} value 
+     */
+    setParam(param, value) {
+        this.params.set(param, value);
+        this.setURL();
+        this.route(this.getParams());
+    }
+
+    clearParams(){
+        this.params.forEach((value, key) => {
+            this.params.delete(key);
+        });
+    }
+
+    /**
+     * Establece varios parámetros en la URL
+     * @param {*} params 
+     */
+    setParams(params) {
+        this.clearParams();
+        Object.entries(params).forEach(([key, value]) => {
+            this.params.set(key, value);
+        });
+        this.setURL();
+        this.route(this.getParams());
+    }
+
+
+    setCurrent(params) {
+        this.currentParameters = params;
+    }
+
+    /**
+     * Compara dos conjuntos de parámetros para determinar si son iguales
+     * @param {*} params1 
+     * @param {*} params2 
+     * @returns 
+     */
+    areParamsEqual(params1, params2) {
+        return JSON.stringify(params1) === JSON.stringify(params2);
+    }
 }
 
-window.Router = Router;
-session.setRouter(new Router());
+window.Router = Router.getInstance();
+session.setRouter(Router.getInstance());

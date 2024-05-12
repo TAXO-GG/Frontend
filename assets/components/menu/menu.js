@@ -16,19 +16,25 @@ class Menu {
     this.initLangSelector();
     this.initBurger();
     var buttons = this.buttons.getElementsByClassName("button");
-    for (var element of buttons) {
-      element.addEventListener("click", function (e) {
-        var element = e.target;
+
+    for (var button of buttons) {
+      button.addEventListener("click", function (e) {
+        var button = e.target;
         if (e.target instanceof HTMLParagraphElement) {
-          element = element.closest(".button");
+          button = button.closest(".button");
         }
-        if (!element.classList.contains("active")) {
+        if (!button.classList.contains("active")) {
           var active = document.getElementById("menu-buttons").querySelector(".active");
           if (active !== null) active.classList.remove("active");
-          element.classList.add("active");
+          button.classList.add("active");
         }
       }.bind(this));
     }
+
+    var window = Router.getInstance().getParam('window');
+    var buttonRelatedToTheUrl = this.buttons.querySelector(`[data-tab="${window}"]`);
+    if(buttonRelatedToTheUrl==null) return;
+    buttonRelatedToTheUrl.classList.add("active")
   }
 
   initLangSelector(){

@@ -10,21 +10,23 @@
   </div>
   <div id="menu-utils" class="container fit v-center">
     <div id="menu-buttons" class="container fit">
-      <div id="home-btn" class="box fit button" onclick="session.goTo('home')">
+      <div id="home-btn" data-tab="home" class="box fit button" onclick="Router.getInstance().goTo('home')">
         <p class="lng a-like" lng="2"></p>
       </div>
-      <div id="classification-btn" class="box fit button" onclick="session.goTo('classification')">
+      <div id="taxons-btn" data-tab="taxons" class="box fit button" onclick="Router.getInstance().goTo('taxons')">
         <p class="lng a-like" lng="3"></p>
       </div>
-      <div id="keys-btn" class="box fit button" onclick="session.goTo('keys')">
+      <div id="keys-btn" data-tab="keys" class="box fit button" onclick="Router.getInstance().goTo('keys')">
         <p class="lng a-like" lng="4"></p>
       </div>
-      <div id="id-btn" class="box fit button" onclick="session.goTo('id')">
+      <!--
+      <div id="id-btn" data-tab="id" class="box fit button" onclick="Router.getInstance().goTo('id')">
         <p class="lng a-like" lng="5"></p>
       </div>
-      <div id="community-btn" class="box fit button" onclick="session.goTo('community')">
+      <div id="community-btn" data-tab="community" class="box fit button" onclick="Router.getInstance().goTo('community')">
         <p class="lng a-like" lng="6"></p>
       </div>
+    -->
     </div>
     <div id="menu-burger" class="button">
       <div></div>

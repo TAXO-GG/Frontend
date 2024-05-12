@@ -6,17 +6,14 @@ class Session{
     key;
     
     preloader;
-
-    paramManager;
-
     tabManager;
-
     router;
+    modal;
+    menu;
+
     loaded;
 
-    modal;
     
-    menu;
     
     constructor(){
     }
@@ -25,20 +22,16 @@ class Session{
 
     async init(){
         await this.initPreloader();
-        await this.initParamManager();
         await this.initTabManager();
         await this.initRouter(); 
         await this.initModal();
         await this.initMenu();
+        
         this.preloader.close();
     }
 
     async initPreloader(){
         await loadComponent("app", "preloader");
-    }
-
-    async initParamManager(){
-        await loadDependence('paramManager');
     }
 
     async initRouter(){
@@ -57,20 +50,10 @@ class Session{
         await loadComponent("app", "tabManager");
     }
 
-    goTo(view){
-        this.paramManager.setParam("window", view);
-    }
-
     // --- Setters ---
     
     setRouter(r){
         this.router = r;
-        r.init();
-    }
-
-    setParamManager(pm){
-        this.paramManager = pm;
-        pm.init();
     }
 
     setPreloader(p){
@@ -95,7 +78,6 @@ class Session{
 
     setTabManager(t){
         this.tabManager = t;
-        t.init();
     }
 
 }

@@ -1,158 +1,185 @@
 class Tab{
-
-    tamManager;
-    tab;
+    id;
+    url;
     title;
+    
+    tabReference; // div en la barra de pestañas
+    tabContentContainerReference; // div que contendrá el contenido de la tab
 
-    content;
+    tabsContainerReference;
+    tabsContentContainerReference;
 
-    constructor(title, tabManager){
-        this.tabManager = tabManager;
+    constructor(id, url, title, tabsContainerReference, tabsContentContainerReference){
+        this.id = id;
+        this.url = url;
         this.title = title;
-        this.content = document.createElement("div");
-        this.init();
+        this.tabsContainerReference = tabsContainerReference;
+        this.tabsContentContainerReference = tabsContentContainerReference;
     }
 
     init(){
-      this.tabManager.tabReferences.push(this);
-      // Crear un nuevo elemento div
-      this.tab  = document.createElement("div");
-      this.tab.className = "tab";
 
-      // Crear un elemento p para el título
-      var p = document.createElement("p");
-      p.textContent = this.title;
+        // Tab element innit
+        this.tabReference  = document.createElement("div");
+        this.tabReference.className = "tab";
+        this.tabReference.id = this.id;
+        var p = document.createElement("p");
 
-      // Crear un elemento a para el botón de cierre (x)
-      var a = document.createElement("a");
-      a.className = "closeTab";
-      a.textContent = "x";
+        if(Number.isInteger(this.title)){
+            p.textContent = getText(this.title);
+            p.classList.add("lng");
+            p.setAttribute("lng", this.title);
+        } else{
+            p.textContent = this.title;
+        }
+        
+        var a = document.createElement("a");
+        a.className = "closeTab";
+        a.textContent = "x";
+        this.tabReference.appendChild(p);
+        this.tabReference.appendChild(a);
+        this.tabsContainerReference.appendChild(this.tabReference);
 
-      this.tab.appendChild(p);
-      this.tab.appendChild(a);
+        // Tab content innit
+        this.tabContentContainerReference = document.createElement("div");
+        this.tabContentContainerReference.className = "tabContent";
+        this.tabsContentContainerReference.appendChild(this.tabContentContainerReference);
+        this.initTabContent();
 
-      this.tabManager.tabList.appendChild(this.tab);
+        this.setActive();
 
-      this.tab = this.tabManager.tabList.lastChild;
-      this.setActive(true);
-      this.tab.addEventListener("click", function(e){
-          if (e.target.classList.contains("closeTab") || this.tab.classList.contains("active")) return;
-          this.setActive();
-      }.bind(this));
-      this.tab.getElementsByClassName("closeTab")[0].addEventListener("click", function(e){
-          this.close();
-      }.bind(this));
+        this.tabReference = this.tabsContainerReference.lastChild;
+
+        this.tabReference.addEventListener("click", function(e){
+            if (e.target.classList.contains("closeTab") || this.tabReference.classList.contains("active")) return;
+            Router.getInstance().setParams(this.url);
+        }.bind(this));
+        this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", function(e){
+            this.close();
+        }.bind(this));
     }
 
-    setActive(justCreated){
-      if(this.tabManager.active != null) this.tabManager.active.removeActive();
-      this.tabManager.active = this;
-      this.tab.classList.add("active");
+    initTabContent(){
+        let p = document.createElement("h2");
+        p.textContent = this.title;
+        this.tabContentContainerReference.appendChild(p);
+    }
 
-      this.extendsSetActive(justCreated);
+    setActive(){
+        if(TabManager.getInstance().activeTab != null) TabManager.getInstance().getActiveTab().removeActive();
+        TabManager.getInstance().setActiveTab(this);
+        this.tabReference.classList.add("active");
+        this.tabContentContainerReference.classList.remove("none");
 
-      this.loadContent(this.content);
-    } extendsSetActive(justCreated){}
-    
+        var buttons = document.getElementById("menu-buttons");
+        if (buttons == null) return;
+        var buttonsActive = buttons.querySelectorAll(".active");
+        if (buttonsActive == null) return;
+        for(var i = 0; i < buttonsActive.length; i++) {
+            buttonsActive[i].classList.remove("active");
+        }
+
+        var thisRelatedButton = buttons.querySelector(`[data-tab="${this.id}"]`);
+        if(thisRelatedButton==null) return;
+        thisRelatedButton.classList.add("active")
+    }
 
     removeActive(){
-      this.tab.classList.remove("active");
+        this.tabReference.classList.remove("active");
+        this.tabContentContainerReference.classList.add("none");
+    }
+
+    updateUrl(url){
+        this.url = url;
+        Router.getInstance().setParams(this.url);
     }
 
     close(){
-      while (this.tabManager.tabDisplay.firstChild) {
-        this.content.appendChild(this.tabManager.tabDisplay.firstChild);
-      }
-      this.removeActive();
-      deleteFromArray(this.tabManager.tabReferences, this);
-      this.tabManager.tabList.removeChild(this.tab);
-      if(this.tabManager.active == this){
-        var lastTab = this.tabManager.getLast();
-        if(lastTab!=null) lastTab.setActive();
-      }
-      this.extendsClose();
-    }
-
-    loadContent(container){
-      while (container.firstChild) {
-        this.tabManager.tabDisplay.appendChild(container.firstChild);
-      }
-    }
-
-    extendsClose(){}
-
-}
-
-class Keys_Tab extends Tab{
-  static keys_Tab = null;
-  static visible = false;
-  constructor(){
-    super(getText(4), session.tabManager);
-  }
-  static getInstance(){
-    console.log(Keys_Tab.keys_Tab);
-    if(Keys_Tab.keys_Tab == null){
-      Keys_Tab.keys_Tab = new Keys_Tab();
-    } else {
-      session.tabManager.tabList.appendChild(Keys_Tab.keys_Tab.tab);
-      Keys_Tab.keys_Tab.setActive(true);
-    }
-    Keys_Tab.visible = true;
-    return Keys_Tab.keys_Tab;
-  }
-  extendsSetActive(justCreated){
-    if(justCreated || Keys_Tab.visible) return;
-    Keys_Tab.visible = true;
-    session.paramManager.setParam("window","keys");
-  }
-  extendsClose(){
-    Keys_Tab.visible = false;
-  }
-}
-
-class Home_Tab extends Tab{
-  static home_Tab = null;
-  static visible = false;
-  constructor(){
-    super(getText(2), session.tabManager);
-  }
-  static getInstance(){
-    console.log(Home_Tab.home_Tab);
-    if(Home_Tab.home_Tab == null){
-      Home_Tab.home_Tab = new Home_Tab();
-    } else {
-      session.tabManager.tabList.appendChild(Home_Tab.home_Tab.tab);
-      Home_Tab.home_Tab.setActive(true);
-    }
-    Home_Tab.visible = true;
-    return Home_Tab.home_Tab;
-  }
-  extendsSetActive(justCreated){
-    
-    if(justCreated || Home_Tab.visible) return;
-    Home_Tab.visible = true;
-    session.paramManager.setParam("window","home");
-  }
-  extendsClose(){
-    Home_Tab.visible = false;
-  }
-}
-
-class UpdateLimit {
-    lastUpdateTime = 0;
-    frameRate;
-
-    constructor(limitPerSecond){
-        this.frameRate = 1000 / limitPerSecond;
-    }
-
-    update = async (e, updateFunction) => {
-        const currentTime = performance.now();
-        if (currentTime - this.lastUpdateTime >= 1000 / this.frameRate) {
-            updateFunction(e);
-            this.lastUpdateTime = currentTime;
+        let activeTab = TabManager.getInstance().getActiveTab();
+        if(activeTab != null){
+            if(this.id == activeTab.id){
+                var lastTab = Router.getInstance().getLastTab();
+                if(lastTab!=null) lastTab.setActive();
+            }
         }
+        this.tabsContainerReference.removeChild(this.tabReference);
+        this.tabsContentContainerReference.removeChild(this.tabContentContainerReference);
+        delete session.tabManager.tabReferences[this.id];
     }
+}
+
+class TabManager{
+
+    static instance;
+
+    tabManagercontainerReference;
+
+    tabsContainerReference;
+    tabsContentContainerReference;
+
+    tabReferences;
+    activeTab;
+
+    constructor(tabManagercontainerReference, tabsContentContainerReference){
+        this.tabManagercontainerReference = tabManagercontainerReference;
+        this.tabsContentContainerReference = tabsContentContainerReference;
+        this.tabReferences = {};
+        this.activeTab = null;
+    }
+
+    init(){
+        const tabManagerMainDiv = document.createElement("div");
+        tabManagerMainDiv.className = "TabManager";
+
+        this.tabsContainerReference = document.createElement("div");
+        this.tabsContainerReference.className = "TabList";
+        this.slider = new Slider(this.tabsContainerReference);
+
+        this.tabDisplay = document.createElement("div");
+        this.tabDisplay.className = "tabDisplay";
+
+        tabManagerMainDiv.appendChild(this.tabsContainerReference);
+        tabManagerMainDiv.appendChild(this.tabDisplay);
+
+        this.tabManagercontainerReference.appendChild(tabManagerMainDiv);
+    }
+
+    static getInstance(){
+        if(TabManager.instance == null){
+            TabManager.instance = new TabManager(document.body, document.body);
+            TabManager.instance.init();
+        }
+        return TabManager.instance;
+    }
+
+    setActiveTab(tab){
+        this.activeTab = tab;
+    }
+
+    getActiveTab(){
+        return this.activeTab;
+    }
+
+    getTab(id){
+        return this.tabReferences[id];
+    }
+
+    createTab(id, title, url){
+        var tab = this.getTab(id);
+        if(tab != null){
+            tab.setActive();
+            return tab;
+        }
+        tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference);
+        tab.init();
+        this.tabReferences[id] = tab;
+        return tab;
+    }
+
+    getLastTab(){
+        return this.tabReferences[this.tabReferences.length - 1];
+    }
+
 }
 
 class Slider {
@@ -213,64 +240,24 @@ class Slider {
       this.slider.addEventListener('mouseup', this.end);
       this.slider.addEventListener('touchend', this.end);
     }
-  }
-
-class TabManager{
-
-    tabReferences;
-    active;
-
-    tabList;
-    container;
-    slider;
-    tabDisplay;
-
-    getLast(){
-      if(this.tabReferences == null) return null;
-      var length = this.tabReferences.length;
-      if(length > 0) return this.tabReferences[length - 1];
-      return null;
-    }
-
-    constructor(container){
-        this.container = container;
-        this.tabReferences = new Array();
-    }
-    
-    init(){
-      const tabManager = document.createElement("div");
-      tabManager.className = "TabManager";
-
-      this.tabList = document.createElement("div");
-      this.tabList.className = "TabList";
-      this.slider = new Slider(this.tabList);
-
-      this.tabDisplay = document.createElement("div");
-      this.tabDisplay.className = "tabDisplay";
-
-      tabManager.appendChild(this.tabList);
-      tabManager.appendChild(this.tabDisplay);
-
-      this.container.appendChild(tabManager);
-    }
-
-    initTab(title){
-        return new Tab(title, this);
-    }
-
-    initKeys(){
-      return Keys_Tab.getInstance();
-    }
-
-    initHome(){
-      return Home_Tab.getInstance();
-    }
-
 }
 
-window.TabManager = TabManager;
-session.setTabManager(new TabManager(document.body));
-session.tabManager.initTab("Pestaña 1");
-session.tabManager.initTab("Pestaña 2");
-session.tabManager.initTab("Pestaña 3");
-session.tabManager.initTab("Pestaña 4");
+class UpdateLimit {
+    lastUpdateTime = 0;
+    frameRate;
+
+    constructor(limitPerSecond){
+        this.frameRate = 1000 / limitPerSecond;
+    }
+
+    update = async (e, updateFunction) => {
+        const currentTime = performance.now();
+        if (currentTime - this.lastUpdateTime >= 1000 / this.frameRate) {
+            updateFunction(e);
+            this.lastUpdateTime = currentTime;
+        }
+    }
+}
+
+window.TabManager = TabManager.getInstance();
+session.setTabManager(TabManager.getInstance());
