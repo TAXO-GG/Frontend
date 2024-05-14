@@ -20,9 +20,9 @@ class Router {
     static getInstance(){
         if(Router.instance == null){
             Router.instance = new Router();
+            Router.instance.initParams();
+            Router.instance.init();
         }
-        Router.instance.initParams();
-        Router.instance.init();
         return Router.instance;
     }
 
@@ -33,7 +33,7 @@ class Router {
         const params = this.getParams();
         const countParams = Object.keys(params).length;
         if (countParams <= 0) {
-            this.route({window: 'home'});
+            this.setParam('window', 'home');
         } else {
             this.route(params);
         }
@@ -45,10 +45,13 @@ class Router {
      * @returns 
      */
     route(params) {
+        console.log(params);
         if (this.currentParameters && this.areParamsEqual(params, this.currentParameters)) return;
         let currentWindow = this.currentParameters ? this.currentParameters['window'] : null;
         this.setCurrent(params);
-        if (params['window'] !== currentWindow) {
+        if (params['window'] == null) {
+            this.updateView('home');
+        } else if (params['window'] !== currentWindow) {
             this.updateView(params['window']);
         }
     }
@@ -75,7 +78,7 @@ class Router {
             case "profile":
                 // Heredar y pasar n parámetro extra con datos del perfil
                 if(session.profile != null){
-                    TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
+                    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createContentFunction);
                 }
                 loadUserProfileTab();
                 break;
@@ -183,6 +186,14 @@ class Router {
         return JSON.stringify(params1) === JSON.stringify(params2);
     }
 }
+
+function createProfileContent(tabContentContainerReference) {
+    // Aquí defines el contenido que quieres dentro de la pestaña
+    var p = document.createElement("p");
+    p.textContent = "Este es el contenido de la pestaña de perfil.";
+    tabContentContainerReference.appendChild(p);
+}
+
 
 window.Router = Router.getInstance();
 session.setRouter(Router.getInstance());

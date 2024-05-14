@@ -348,9 +348,9 @@ async function loadUserProfileTab(){
     if(profile == null){
       console.error('Error loading profile');
     }
-    TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
+    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createContentFunction);
   } else{
-    TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
+    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createContentFunction);
   }
 }
 
@@ -503,6 +503,30 @@ async function main(){
 
 main();
 
+async function createContentFunction(tabContentContainerReference) {
+  // Supongamos que session.profile ya contiene los datos en formato JSON
 
+  var p = document.createElement("p");
 
+  try {
+    var profileData;
+    if (typeof session.profile === "string") {
+      // Si session.profile es una cadena JSON
+      profileData = JSON.parse(session.profile);
+    } else {
+      // Si session.profile ya es un objeto
+      profileData = session.profile;
+    }
 
+    // Convertir el objeto JSON a una cadena legible
+    var stringContent = JSON.stringify(profileData, null, 2);
+    console.log(stringContent);
+
+    p.textContent = stringContent;
+    tabContentContainerReference.appendChild(p);
+  } catch (error) {
+    console.error("Error parsing profile data:", error);
+    p.textContent = "Error loading profile data.";
+    tabContentContainerReference.appendChild(p);
+  }
+}
