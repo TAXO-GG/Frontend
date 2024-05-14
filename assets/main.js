@@ -321,7 +321,6 @@ async function handleLogin() {
   var password = document.getElementById('login_password').value;
   var logged = await loginFromApi(email, password);
   if (logged) {
-    console.log("closeAuthentication");
     closeAuth();
   }
 }
@@ -344,18 +343,14 @@ async function handleRegister() {
 }
 
 async function loadUserProfileTab(){
-  try {
-    if(session.profile == null){
-      const profile = await getProfileFromApi();
-      console.log('Profile:', profile);
-      if(profile != null){
-        session.profile = response.data;
-      }
+  if(session.profile == null){
+    var profile = await getProfileFromApi();
+    if(profile == null){
+      console.error('Error loading profile');
     }
-    Router.getInstance().setParams({window:"profile"});
-  } catch (error) {
-      console.error('Error:', error);
-      throw error;
+    TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
+  } else{
+    TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
   }
 }
 
@@ -392,6 +387,7 @@ async function httpRequest(url, useToken, method, bodyParam = null, callback = n
   }
   const options = {method, headers: new Headers(headers), body: bodyParam && method !== 'GET' ? JSON.stringify(bodyParam) : undefined};
   const response = await fetch(url, options);
+  console.log("Base http response: ",response);
   if(response == null){
     return null;
   }
@@ -418,13 +414,11 @@ async function registerInApi(username, name, email, password) {
   };
   try {
       const response = await postToApi(endpoint, data, false);
-      console.log("register response",response);
       if(response==null){
         registerFailed();
         return false;
       }
       if(response.statusCode === 200) {
-        console.log('Registration successful:', response);
         return true;
       } else if(response.statusCode === 409){
         if(response.error.type == 'EMAIL_ALREADY_EXIST'){
@@ -450,16 +444,20 @@ async function loginFromApi(username, password) {
   };
   try {
       const response = await postToApi(endpoint, data, false);
+      if(response==null){
+        registerFailed();
+        return false;
+      }
       console.log(response);
       if(response.statusCode === 200) {
         if (response.data && response.data.token) {
             localStorage.setItem('token', response.data.token);
+            loadUserProfileTab();
             return true;
         }
-      } else {
-        loginFailed();
-        return false;
       }
+      loginFailed();
+      return false;
   } catch (error) {
       console.error('Login failed e:', error);
       loginFailed();
@@ -467,21 +465,22 @@ async function loginFromApi(username, password) {
   }
 }
 
-async function getDataFromApi(url, useToken){
-  try {
-      const response = await getFromApi(url, useToken);
-      if(response.statusCode === 200){
-        return response.data;
-      }
-      return null;
-  } catch (error) {
-      console.error('Error:', error);
-      throw error;
-  }
-}
-
 async function getProfileFromApi(){
-  return await getDataFromApi("/profile", true);
+  const endpoint = "/profile";
+  try {
+    const response = await getFromApi(endpoint, true);
+    console.log("getProfileFromApi", response);
+    if(response==null){
+      return null;
+    }
+    if(response.statusCode === 200){
+      session.profile = response.data;
+      return response.data;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error:', error);
+  }
 }
 
 /* * * * * * * * * * *

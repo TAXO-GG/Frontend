@@ -74,10 +74,10 @@ class Router {
                 break;
             case "profile":
                 // Heredar y pasar n parámetro extra con datos del perfil
-                if(session.profile == null){
-                    loadUserProfileTab();
+                if(session.profile != null){
+                    TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
                 }
-                TabManager.getInstance().createTab('profile', 'profile', {window: 'profile'});
+                loadUserProfileTab();
                 break;
             default:
                 console.log("No view specified or view not recognized");
