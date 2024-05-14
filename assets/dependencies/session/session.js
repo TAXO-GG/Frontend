@@ -13,6 +13,7 @@ class Session{
 
     loaded;
 
+    profile;
     
     
     constructor(){

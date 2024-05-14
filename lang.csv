@@ -7,3 +7,20 @@ nom;Español;English;Euskara;Català
 4;Claves;Keys;Giltzak;Claus
 5;Solicitud ID;ID Request;ID Aplikazio;Sol·licitud ID
 6;Comunidad;Comunity;Komunitatea;Comunitat
+7;Usuario / Correo;Username / Email address;Erabiltzailea / Posta elektronikoa;Usuari / Correu electrònic
+8;Contraseña;Password;Pasahitza;Contrasenya
+9;Mantener la sesión iniciada;Stay logged-in;Saioa hasita mantendu;Mantenir la sessió iniciada
+10;Intento de inicio de sesión fallido;Failed login attempt;Saio-hasiera saiakera huts egin du;ntent d'inici de sessió fallit
+11;Iniciar sesión;Sign in;Saioa hasi;Iniciar sessió
+12;Crear cuenta;Create an account;Kontua sortu;Crear compte
+13;Nombre;Name;Izen-abizenak;Nom
+14;Repite la contraseña;Repeat password;Pasahitza errepikatu;Repeteix la contrasenya
+15;Registrarme;Register;Izena eman;Registrar-me
+16;Correo;Email address;Posta elektronikoa;Correu electrònic
+17;¿Ya tienes cuenta?;Have an account?;Kontua baduzu jada?;Ja tens compte?
+18;Iniciar sesión;Login;Saioa hasi;Iniciar sessió
+19;Registrarme;Register;Izena eman;Registrar-me
+20;Las contraseñas no coinciden;Passwords do not match;Pasahitzak ez datoz bat;Les contrasenyes no coincideixen
+21;Usuario;Username;Erabiltzailea;Usuari
+22;El nombre de usuario indicado ya está registrado;The username provided is already registered;Erabiltzaile izena dagoeneko erregistratuta dago;El nom d'usuari indicat ja està registrat
+23;El correo electrónico indicado ya está registrado;The email provided address is already registered;Posta elektroniko helbidea dagoeneko erregistratuta dago;L'adreça de correu electrònic indicada ja està registrada

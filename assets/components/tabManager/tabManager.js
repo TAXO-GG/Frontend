@@ -61,7 +61,13 @@ class Tab{
 
     initTabContent(){
         let p = document.createElement("h2");
-        p.textContent = this.title;
+        if(Number.isInteger(this.title)){
+            p.textContent = getText(this.title);
+            p.classList.add("lng");
+            p.setAttribute("lng", this.title);
+        } else{
+            p.textContent = this.title;
+        }
         this.tabContentContainerReference.appendChild(p);
     }
 
@@ -98,7 +104,7 @@ class Tab{
         let activeTab = TabManager.getInstance().getActiveTab();
         if(activeTab != null){
             if(this.id == activeTab.id){
-                var lastTab = Router.getInstance().getLastTab();
+                var lastTab = TabManager.getInstance().getLastTab();
                 if(lastTab!=null) lastTab.setActive();
             }
         }

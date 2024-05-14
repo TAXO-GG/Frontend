@@ -159,7 +159,12 @@ function setLangTo(parent) {
   const dictionary = langs.get(document.documentElement.getAttribute('lang'));
   const elements = parent.getElementsByClassName('lng');
   Array.from(elements).forEach(element => {
-      element.innerHTML = dictionary.get(element.getAttribute("lng"));
+    const translation = dictionary.get(element.getAttribute("lng")).trim();
+    if (element.tagName.toLowerCase() === 'input') {
+        element.setAttribute('placeholder', translation);
+    } else {
+        element.innerHTML = translation;
+    }
   });
 }
 
@@ -221,6 +226,262 @@ async function langsFromCSV(path) {
       reject(error);
     }
   });
+}
+
+/* * * * * * * * * * *
+ *                   *
+ *   Mixed functions *
+ *                   *
+ * * * * * * * * * * */
+
+function hide(querySelector) {
+  var elements = document.querySelectorAll(querySelector);
+  elements.forEach(element => {
+    element.classList.add("none");
+  });
+}
+
+function show(querySelector) {
+  var elements = document.querySelectorAll(querySelector);
+  elements.forEach(element => {
+    element.classList.remove("none");
+  });
+}
+
+function shake(querySelector){
+  var elements = document.querySelectorAll(querySelector);
+  elements.forEach(element => {
+    element.classList.add("shake");
+    setTimeout(function(){
+      element.classList.remove("shake");
+    }, 800);
+  });
+}
+
+function showLogin(){
+  var auth = document.getElementById("auth");
+  if(auth == null) return;
+  var login = auth.querySelector("#login_window");
+  if(login == null) return;
+  var register = auth.querySelector("#register_window");
+  if(register == null) return;
+  register.classList.add("none");
+  login.classList.remove("none");
+  auth.classList.remove("none");
+}
+
+function loginFailed(){
+  show("#failed_login");
+  shake("#login_window");
+}
+
+function registerFailed(){
+  shake('#register_window');
+}
+
+function usernameAlreadyExist(){
+  show('#username_already_exists');
+}
+
+function emailAlreadyExist(){
+  show('#email_already_exists');
+}
+
+function unmatchingPasswords(){
+  show("#unmatching_passwords");
+  shake('#register_window');
+}
+
+function showRegister(){
+  var auth = document.getElementById("auth");
+  if(auth == null) return;
+  var login = auth.querySelector("#login_window");
+  if(login == null) return;
+  var register = auth.querySelector("#register_window");
+  if(register == null) return;
+  login.classList.add("none");
+  register.classList.remove("none");
+  auth.classList.remove("none");
+}
+
+function closeAuth(){
+  var auth = document.getElementById("auth");
+  if(auth == null) return;
+  var login = auth.querySelector("#login_window");
+  if(login == null) return;
+  var register = auth.querySelector("#register_window");
+  if(register == null) return;
+  auth.classList.add("none");
+  login.classList.add("none");
+  register.classList.add("none");
+}
+
+async function handleLogin() {
+  var email = document.getElementById('login_email').value;
+  var password = document.getElementById('login_password').value;
+  var logged = await loginFromApi(email, password);
+  if (logged) {
+    console.log("closeAuthentication");
+    closeAuth();
+  }
+}
+
+async function handleRegister() {
+  var username = document.getElementById('register_username').value;
+  var name = document.getElementById('register_name').value;
+  var email = document.getElementById('register_email').value;
+  var password = document.getElementById('register_password').value;
+  var repeatPassword = document.getElementById('register_repeat_password').value;
+  if (password !== repeatPassword) {
+    unmatchingPasswords()
+    return;
+  }
+  var registered = await registerInApi(username, name, email, password);
+  if (registered == true) {
+    closeAuth();
+    showLogin();
+  }
+}
+
+async function loadUserProfileTab(){
+  try {
+    if(session.profile == null){
+      const profile = await getProfileFromApi();
+      console.log('Profile:', profile);
+      if(profile != null){
+        session.profile = response.data;
+      }
+    }
+    Router.getInstance().setParams({window:"profile"});
+  } catch (error) {
+      console.error('Error:', error);
+      throw error;
+  }
+}
+
+async function logout() {
+  localStorage.removeItem('token');
+  session.profile = null;
+  var profileTab = TabManager.getInstance().getTab('profile');
+  if (profileTab != null) {
+    profileTab.close();
+  }
+}
+
+/* * * * * * * * * * * *
+ *                     *
+ *   Http  functions   *
+ *                     *
+ * * * * * * * * * * * */
+
+const baseApiUrl = 'http://localhost:6969';
+
+async function httpRequest(url, useToken, method, bodyParam = null, callback = null) {
+  const headers = {
+    'Accept': 'application/json',
+    'Content-Type': method !== 'GET' ? 'application/json' : undefined
+  };
+  if (useToken) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showLogin();
+      return;
+    } else {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+  }
+  const options = {method, headers: new Headers(headers), body: bodyParam && method !== 'GET' ? JSON.stringify(bodyParam) : undefined};
+  const response = await fetch(url, options);
+  if(response == null){
+    return null;
+  }
+  return await response.json();
+}
+
+async function getFromApi(endpoint, useToken){
+  const url = baseApiUrl + endpoint;
+  return await httpRequest(url, useToken, 'GET');
+}
+
+async function postToApi(endpoint, data, useToken) {
+  const url = baseApiUrl + endpoint;
+  return await httpRequest(url, useToken, 'POST', data);
+}
+
+async function registerInApi(username, name, email, password) {
+  endpoint = "/register";
+  const data = {
+      username: username,
+      password: password,
+      email: email,
+      name: name
+  };
+  try {
+      const response = await postToApi(endpoint, data, false);
+      console.log("register response",response);
+      if(response==null){
+        registerFailed();
+        return false;
+      }
+      if(response.statusCode === 200) {
+        console.log('Registration successful:', response);
+        return true;
+      } else if(response.statusCode === 409){
+        if(response.error.type == 'EMAIL_ALREADY_EXIST'){
+          emailAlreadyExist();
+        } else if(response.error.type == 'USERNAME_ALREADY_EXIST'){
+          usernameAlreadyExist();
+        }
+      }
+      registerFailed();
+      return false;
+  } catch (error) {
+      registerFailed()
+      console.error('Registration failed:', error);
+      throw error;
+  }
+}
+
+async function loginFromApi(username, password) {
+  const endpoint = "/login";
+  const data = {
+      username: username,
+      password: password
+  };
+  try {
+      const response = await postToApi(endpoint, data, false);
+      console.log(response);
+      if(response.statusCode === 200) {
+        if (response.data && response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            return true;
+        }
+      } else {
+        loginFailed();
+        return false;
+      }
+  } catch (error) {
+      console.error('Login failed e:', error);
+      loginFailed();
+      throw error;
+  }
+}
+
+async function getDataFromApi(url, useToken){
+  try {
+      const response = await getFromApi(url, useToken);
+      if(response.statusCode === 200){
+        return response.data;
+      }
+      return null;
+  } catch (error) {
+      console.error('Error:', error);
+      throw error;
+  }
+}
+
+async function getProfileFromApi(){
+  return await getDataFromApi("/profile", true);
 }
 
 /* * * * * * * * * * *

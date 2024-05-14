@@ -85,3 +85,32 @@ body {
 .none{
     display: none !important;
 }
+
+.in-line{
+    display: flex;
+    justify-content: space-between;
+}
+.align-right{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.close_paragraph{
+    height: 0;
+    margin: 0;
+    padding: 0;
+    text-align: end;
+}
+
+.shake{
+    animation: skew-y-shake 1s infinite;
+}
+
+@keyframes skew-y-shake {
+    0% { transform: skewY(-5deg); }
+    5% { transform: skewY(5deg); }
+    10% { transform: skewY(-5deg); }
+    15% { transform: skewY(5deg); }
+    20% { transform: skewY(0deg); }
+    100% { transform: skewY(0deg); }  
+}
