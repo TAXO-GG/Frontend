@@ -10,6 +10,7 @@ class Session{
     router;
     modal;
     menu;
+    cache;
 
     loaded;
 
@@ -22,12 +23,14 @@ class Session{
     //  --- Initialize ---
 
     async init(){
+        await this.initCache();
         await this.initPreloader();
         await this.initTabManager();
         await this.initRouter(); 
         await this.initModal();
         await this.initMenu();
-        
+        await getProfileFromApiInBackground();
+
         this.preloader.close();
     }
 
@@ -49,6 +52,10 @@ class Session{
 
     async initTabManager(){
         await loadComponent("app", "tabManager");
+    }
+
+    async initCache(){
+        await loadDependence('cache');
     }
 
     // --- Setters ---
@@ -79,6 +86,10 @@ class Session{
 
     setTabManager(t){
         this.tabManager = t;
+    }
+
+    setCache(c){
+        this.cache = c;
     }
 
 }

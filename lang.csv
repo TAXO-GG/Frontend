@@ -24,3 +24,6 @@ nom;Español;English;Euskara;Català
 21;Usuario;Username;Erabiltzailea;Usuari
 22;El nombre de usuario indicado ya está registrado;The username provided is already registered;Erabiltzaile izena dagoeneko erregistratuta dago;El nom d'usuari indicat ja està registrat
 23;El correo electrónico indicado ya está registrado;The email provided address is already registered;Posta elektroniko helbidea dagoeneko erregistratuta dago;L'adreça de correu electrònic indicada ja està registrada
+24;Cerrar sesión;logout;Saioa itxi;Tancar sessió
+25;Nombre del taxón;Taxon name;Taxoiaren izena;Nom del tàxon
+26;Buscar;Search;Bilatu;Buscar

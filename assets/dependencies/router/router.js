@@ -66,7 +66,7 @@ class Router {
                 TabManager.getInstance().createTab('home', 2, {window: 'home'});
                 break;
             case "taxons":
-                TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'});
+                TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'}, createTaxonsTabContent);
                 break;
             case "keys":
                 TabManager.getInstance().createTab('keys', 4, {window: 'keys'});
@@ -78,9 +78,10 @@ class Router {
             case "profile":
                 // Heredar y pasar n parámetro extra con datos del perfil
                 if(session.profile != null){
-                    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createContentFunction);
+                    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createProfileTabContent);
+                } else {
+                    loadUserProfileTab();
                 }
-                loadUserProfileTab();
                 break;
             default:
                 console.log("No view specified or view not recognized");
@@ -164,6 +165,7 @@ class Router {
      */
     setParams(params) {
         this.clearParams();
+        console.log('setParams', params);
         Object.entries(params).forEach(([key, value]) => {
             this.params.set(key, value);
         });
@@ -185,13 +187,6 @@ class Router {
     areParamsEqual(params1, params2) {
         return JSON.stringify(params1) === JSON.stringify(params2);
     }
-}
-
-function createProfileContent(tabContentContainerReference) {
-    // Aquí defines el contenido que quieres dentro de la pestaña
-    var p = document.createElement("p");
-    p.textContent = "Este es el contenido de la pestaña de perfil.";
-    tabContentContainerReference.appendChild(p);
 }
 
 

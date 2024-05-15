@@ -47,26 +47,21 @@ class Tab{
         this.tabContentContainerReference = document.createElement("div");
         this.tabContentContainerReference.className = "tabContent";
         this.tabsContentContainerReference.appendChild(this.tabContentContainerReference);
-        this.initTabContent();
-
-        this.setActive();
+        await this.initTabContent();
 
         this.tabReference = this.tabsContainerReference.lastChild;
 
         this.tabReference.addEventListener("click", function(e){
             if (e.target.classList.contains("closeTab") || this.tabReference.classList.contains("active")) return;
+            this.setActive();
             Router.getInstance().setParams(this.url); // Object params key:value
         }.bind(this));
         this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", function(e){
             this.close();
         }.bind(this));
-
-        if(this.createContentFunction && this.createContentFunction instanceof Function && this.tabContentContainerReference){
-            await createContentFunction(this.tabContentContainerReference);
-        }
     }
 
-    initTabContent(){
+    async initTabContent(){
         let p = document.createElement("h2");
         if(Number.isInteger(this.title)){
             p.textContent = getText(this.title);
@@ -76,10 +71,18 @@ class Tab{
             p.textContent = this.title;
         }
         this.tabContentContainerReference.appendChild(p);
+
+        if(this.createContentFunction && this.createContentFunction instanceof Function && this.tabContentContainerReference){
+            await this.createContentFunction(this.tabContentContainerReference);
+        }
+
+        setLangTo(this.tabContentContainerReference);
     }
 
     setActive(){
-        if(TabManager.getInstance().activeTab != null) TabManager.getInstance().getActiveTab().removeActive();
+        if(TabManager.getInstance().activeTab != null){
+            TabManager.getInstance().getActiveTab().removeActive();
+        }
         TabManager.getInstance().setActiveTab(this);
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
@@ -181,10 +184,13 @@ class TabManager{
         var tab = this.getTab(id);
         if(tab != null){
             tab.setActive();
+            console.log("calling set params: " + tab.params);
+            Router.getInstance().setParams(tab.url);
             return tab;
         }
         tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction);
         await tab.init();
+        tab.setActive();
         this.tabReferences[id] = tab;
         return tab;
     }

@@ -347,20 +347,31 @@ async function loadUserProfileTab(){
     var profile = await getProfileFromApi();
     if(profile == null){
       console.error('Error loading profile');
+      return;
     }
-    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createContentFunction);
+    Router.getInstance().updateView('profile');
   } else{
-    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createContentFunction);
+    Router.getInstance().updateView('profile');
   }
 }
 
 async function logout() {
   localStorage.removeItem('token');
-  session.profile = null;
+  clearProfile();
   var profileTab = TabManager.getInstance().getTab('profile');
   if (profileTab != null) {
     profileTab.close();
   }
+}
+
+function setProfile(profile){
+  session.profile = profile;
+  hide("#profile-question-mark");
+}
+
+function clearProfile(){
+  session.profile = null;
+  show("#profile-question-mark");
 }
 
 /* * * * * * * * * * * *
@@ -380,7 +391,7 @@ async function httpRequest(url, useToken, method, bodyParam = null, callback = n
     const token = localStorage.getItem('token');
     if (!token) {
       showLogin();
-      return;
+      return null;
     } else {
       headers['Authorization'] = 'Bearer ' + token;
     }
@@ -465,6 +476,8 @@ async function loginFromApi(username, password) {
   }
 }
 
+
+
 async function getProfileFromApi(){
   const endpoint = "/profile";
   try {
@@ -474,7 +487,47 @@ async function getProfileFromApi(){
       return null;
     }
     if(response.statusCode === 200){
+      setProfile(response.data);
+      return response.data;
+    } else if(response.statusCode == 401){
+      localStorage.removeItem('token');
+      showLogin();
+      return null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+async function getProfileFromApiInBackground(){
+  if(localStorage.getItem('token')==null){
+    return;
+  }
+  const endpoint = "/profile";
+  try {
+    const response = await getFromApi(endpoint, true);
+    console.log("getProfileFromApi", response);
+    if(response==null){
+      return;
+    }
+    if(response.statusCode === 200){
       session.profile = response.data;
+      hide("#profile-question-mark");
+    } 
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+  }
+}
+
+async function getTaxonFromApi(taxon){
+  const endpoint = `/taxon/${taxon}`;
+  try {
+    const response = await getFromApi(endpoint, true);
+    if(response==null){
+      return null;
+    }
+    if(response.statusCode === 200){
       return response.data;
     }
     return null;
@@ -503,30 +556,177 @@ async function main(){
 
 main();
 
-async function createContentFunction(tabContentContainerReference) {
-  // Supongamos que session.profile ya contiene los datos en formato JSON
-
-  var p = document.createElement("p");
+async function createProfileTabContent(tabContentContainerReference) {
+  if(session.profile == null){
+    await getProfileFromApi();
+    if(session.profile == null){
+      console.error('Error loading profile');
+      return;
+    }
+  }
 
   try {
     var profileData;
     if (typeof session.profile === "string") {
-      // Si session.profile es una cadena JSON
       profileData = JSON.parse(session.profile);
     } else {
-      // Si session.profile ya es un objeto
       profileData = session.profile;
     }
 
-    // Convertir el objeto JSON a una cadena legible
-    var stringContent = JSON.stringify(profileData, null, 2);
-    console.log(stringContent);
+    var userinfo = document.createElement("p");
 
-    p.textContent = stringContent;
-    tabContentContainerReference.appendChild(p);
+    var name = document.createElement("span");
+    name.textContent = profileData.name;
+    name.classList.add("user-name");
+    userinfo.appendChild(name);
+
+    var separator = document.createTextNode(" | ");
+    userinfo.appendChild(separator);
+
+    var username = document.createElement("span");
+    username.textContent = `@${profileData.username}`;
+    username.classList.add("user-username");
+    userinfo.appendChild(username);
+
+    var logoutButton = document.createElement("a");
+    logoutButton.classList.add("btn","btn-primary", "lng");
+    logoutButton.setAttribute("lng","24");
+    logoutButton.textContent = "Logout";
+    logoutButton.id = "logout-button";
+    logoutButton.addEventListener("click", function(){
+      logout();
+      Router.getInstance().updateView('home');
+    });
+    userinfo.appendChild(logoutButton);
+
+    tabContentContainerReference.appendChild(userinfo);
+    
   } catch (error) {
     console.error("Error parsing profile data:", error);
-    p.textContent = "Error loading profile data.";
-    tabContentContainerReference.appendChild(p);
   }
+}
+
+async function createTaxonsTabContent(tabContentContainerReference){
+
+  var searchDiv = document.createElement("div");
+  searchDiv.classList.add("search-div");
+
+  var searchBox = document.createElement("input");
+  searchBox.type = "text";
+  searchBox.id = "taxon-search-box";
+  searchBox.classList.add("form-control", "search-box","lng");
+  searchBox.setAttribute("lng","25");
+  searchDiv.appendChild(searchBox);
+
+  var searchButton = document.createElement("a");
+  searchButton.classList.add("btn","btn-primary", "lng");
+  searchButton.setAttribute("lng","26");
+  searchButton.textContent = "Search";
+  searchButton.id = "taxon-search-button";
+  searchDiv.appendChild(searchButton);
+
+  tabContentContainerReference.appendChild(searchDiv);
+
+  var resultDiv = document.createElement("div");
+  resultDiv.classList.add("result-div");
+  resultDiv.id = "taxon-result-div";
+  tabContentContainerReference.appendChild(resultDiv);
+
+  searchButton.addEventListener("click", function(){
+    searchTaxon(resultDiv, searchBox.value);
+  });
+
+  var params = Router.getInstance().getParams();
+  var urlTaxon = params['taxon'];
+  if(urlTaxon != null){
+    searchBox.value = urlTaxon;
+    searchTaxon(resultDiv, urlTaxon);
+  }
+  
+}
+
+async function searchTaxon(container, taxon, previousTaxon = null) {
+  var searchValue = taxon;
+  if (searchValue.isBlank()) {
+      return;
+  }
+  var taxon = Cache.getInstance().getTaxon(searchValue);
+  if (taxon == null) {
+      taxon = await getTaxonFromApi(searchValue);
+  }
+  container.innerHTML = "";
+  if (taxon == null) {
+      container.innerHTML = `<p>Taxon ${searchValue} was not found.<p>`;
+      if (previousTaxon) {
+          var backLink = document.createElement("a");
+          backLink.textContent = `< Volver a ${previousTaxon}`;
+          backLink.href = "#";
+          backLink.addEventListener("click", function () {
+              searchTaxon(container, previousTaxon);
+          });
+          container.appendChild(backLink);
+      }
+      return;
+  }
+  Cache.getInstance().addTaxon(taxon.name, taxon);
+
+  var hierarchy = document.createElement("p");
+
+  let currentTaxon = taxon;
+  let hierarchyList = [];
+
+  // Construir la jerarquía a partir del objeto taxon
+  while (currentTaxon) {
+      hierarchyList.unshift(currentTaxon.name);
+      currentTaxon = currentTaxon.hierarchy || null;
+  }
+
+  for (let i = 0; i < hierarchyList.length; i++) {
+      let tempTaxon = hierarchyList[i];
+      var hierarchyElement = document.createElement("a");
+      hierarchyElement.textContent = tempTaxon;
+      hierarchyElement.href = "#";
+      hierarchyElement.addEventListener("click", function () {
+          searchTaxon(container, tempTaxon);
+      });
+      hierarchyElement.classList.add("hierarchy-element");
+      hierarchy.appendChild(hierarchyElement);
+      if (i < hierarchyList.length - 1) {
+          var separator = document.createTextNode(" > ");
+          hierarchy.appendChild(separator);
+      }
+  }
+  container.appendChild(hierarchy);
+
+  // Mostrar el nombre del taxón en un h2
+  var taxonNameElement = document.createElement("p");
+  taxonNameElement.innerHTML = `<span class="taxon-level">${taxon.category.name}</span> - <span class="taxon-name">${taxon.name}</span>`;
+  container.appendChild(taxonNameElement);
+
+  var childrensLabel = document.createElement("p");
+  childrensLabel.textContent = "Childs:";
+  container.appendChild(childrensLabel);
+
+  // Mostrar los hijos del taxón
+  if (taxon.children && taxon.children.length > 0) {
+      var childrenList = document.createElement("ul");
+      taxon.children.forEach(child => {
+          var childElement = document.createElement("li");
+          var childLink = document.createElement("a");
+          childLink.textContent = child.name;
+          childLink.href = "#";
+          childLink.addEventListener("click", function () {
+              searchTaxon(container, child.name, taxon.name);
+          });
+          childElement.appendChild(childLink);
+          childrenList.appendChild(childElement);
+      });
+      container.appendChild(childrenList);
+  }
+
+  /*
+  var taxonName = document.createElement("p");
+  taxonName.textContent = JSON.stringify(taxon);
+  container.appendChild(taxonName);
+  */
 }

@@ -82,17 +82,18 @@ body {
     justify-content: center;
 }
 
-.none{
-    display: none !important;
-}
-
 .in-line{
     display: flex;
     justify-content: space-between;
 }
+
 .align-right{
     display: flex;
     justify-content: flex-end;
+}
+
+#logout-button{
+    margin-left: 2rem;
 }
 
 .close_paragraph{
@@ -104,6 +105,32 @@ body {
 
 .shake{
     animation: skew-y-shake 1s infinite;
+}
+
+.user-name{
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+}
+
+.search-div{
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    max-width: 80px;
+}
+
+.search-box{
+    min-width: fit-content;
+    max-width: -webkit-fill-available;
+    max-height: 30px;
+}
+
+.user-username{
+    font-size: .8rem;
+    margin: 0;
+    padding: 0;
 }
 
 @keyframes skew-y-shake {
