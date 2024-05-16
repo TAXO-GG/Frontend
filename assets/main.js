@@ -256,6 +256,14 @@ function setToken(token, keepLoggedIn = true){
   localStorage.setItem('token', token);
 }
 
+function setLoadingCursor() {
+  document.body.style.cursor = 'wait';
+}
+
+function setNormalCursor() {
+  document.body.style.cursor = 'default';
+}
+
 function hide(querySelector) {
   var elements = document.querySelectorAll(querySelector);
   elements.forEach(element => {
@@ -383,6 +391,7 @@ function clearProfile(){
 const baseApiUrl = 'http://localhost:6969';
 
 async function httpRequest(url, useToken, method, bodyParam = null, callback = null) {
+  setLoadingCursor();
   const headers = {
     'Accept': 'application/json',
     'Content-Type': method !== 'GET' ? 'application/json' : undefined
@@ -391,6 +400,7 @@ async function httpRequest(url, useToken, method, bodyParam = null, callback = n
     const token = getToken();
     if (!token) {
       showLogin();
+      setNormalCursor();
       return {statusCode:401};
     } else {
       headers['Authorization'] = 'Bearer ' + token;
@@ -400,12 +410,14 @@ async function httpRequest(url, useToken, method, bodyParam = null, callback = n
   const response = await fetch(url, options);
   console.log("Base http response: ",response);
   if(response == null){
+    setNormalCursor();
     return {statusCode:404};
   } else if (response.status === 401) {
     clearToken();
     showLogin();
   }
   jsonResponse = await response.json();
+  setNormalCursor();
   return jsonResponse;
 }
 
