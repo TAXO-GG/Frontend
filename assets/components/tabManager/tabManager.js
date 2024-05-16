@@ -97,7 +97,9 @@ class Tab{
 
         var thisRelatedButton = buttons.querySelector(`[data-tab="${this.id}"]`);
         if(thisRelatedButton==null) return;
-        thisRelatedButton.classList.add("active")
+        thisRelatedButton.classList.add("active");
+
+        Router.getInstance().setParams(this.url, false);
     }
 
     removeActive(){
@@ -112,6 +114,7 @@ class Tab{
 
     close(){
         let activeTab = TabManager.getInstance().getActiveTab();
+        delete session.tabManager.tabReferences[this.id];
         if(activeTab != null){
             if(this.id == activeTab.id){
                 var lastTab = TabManager.getInstance().getLastTab();
@@ -120,7 +123,6 @@ class Tab{
         }
         this.tabsContainerReference.removeChild(this.tabReference);
         this.tabsContentContainerReference.removeChild(this.tabContentContainerReference);
-        delete session.tabManager.tabReferences[this.id];
     }
 }
 
@@ -195,8 +197,9 @@ class TabManager{
         return tab;
     }
 
-    getLastTab(){
-        return this.tabReferences[this.tabReferences.length - 1];
+    getLastTab() {
+        const keys = Object.keys(this.tabReferences);
+        return this.tabReferences[keys[keys.length - 1]];
     }
 
 }

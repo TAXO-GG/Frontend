@@ -234,6 +234,28 @@ async function langsFromCSV(path) {
  *                   *
  * * * * * * * * * * */
 
+var inMemoryToken;
+
+function clearToken(){
+  inMemoryToken = null;
+  localStorage.removeItem('token');
+}
+
+function getToken(){
+  if (inMemoryToken == null){
+    return localStorage.getItem('token');
+  }
+  return inMemoryToken;
+}
+
+function setToken(token, keepLoggedIn = true){
+  if(!keepLoggedIn){
+    inMemoryToken = token;
+    return;
+  }
+  localStorage.setItem('token', token);
+}
+
 function hide(querySelector) {
   var elements = document.querySelectorAll(querySelector);
   elements.forEach(element => {
@@ -259,15 +281,17 @@ function shake(querySelector){
 }
 
 function showLogin(){
-  var auth = document.getElementById("auth");
-  if(auth == null) return;
-  var login = auth.querySelector("#login_window");
-  if(login == null) return;
-  var register = auth.querySelector("#register_window");
-  if(register == null) return;
-  register.classList.add("none");
-  login.classList.remove("none");
-  auth.classList.remove("none");
+  show("#auth, #login_window");
+  hide("#register_window");
+}
+
+function showRegister(){
+  hide("#login_window");
+  show("#auth, #register_window");
+}
+
+function closeAuth(){
+  hide(".error_message, #auth, #login_window, #register_window");
 }
 
 function loginFailed(){
@@ -290,30 +314,6 @@ function emailAlreadyExist(){
 function unmatchingPasswords(){
   show("#unmatching_passwords");
   shake('#register_window');
-}
-
-function showRegister(){
-  var auth = document.getElementById("auth");
-  if(auth == null) return;
-  var login = auth.querySelector("#login_window");
-  if(login == null) return;
-  var register = auth.querySelector("#register_window");
-  if(register == null) return;
-  login.classList.add("none");
-  register.classList.remove("none");
-  auth.classList.remove("none");
-}
-
-function closeAuth(){
-  var auth = document.getElementById("auth");
-  if(auth == null) return;
-  var login = auth.querySelector("#login_window");
-  if(login == null) return;
-  var register = auth.querySelector("#register_window");
-  if(register == null) return;
-  auth.classList.add("none");
-  login.classList.add("none");
-  register.classList.add("none");
 }
 
 async function handleLogin() {
@@ -356,7 +356,7 @@ async function loadUserProfileTab(){
 }
 
 async function logout() {
-  localStorage.removeItem('token');
+  clearToken();
   clearProfile();
   var profileTab = TabManager.getInstance().getTab('profile');
   if (profileTab != null) {
@@ -388,10 +388,10 @@ async function httpRequest(url, useToken, method, bodyParam = null, callback = n
     'Content-Type': method !== 'GET' ? 'application/json' : undefined
   };
   if (useToken) {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       showLogin();
-      return null;
+      return {statusCode:401};
     } else {
       headers['Authorization'] = 'Bearer ' + token;
     }
@@ -400,9 +400,13 @@ async function httpRequest(url, useToken, method, bodyParam = null, callback = n
   const response = await fetch(url, options);
   console.log("Base http response: ",response);
   if(response == null){
-    return null;
+    return {statusCode:404};
+  } else if (response.status === 401) {
+    clearToken();
+    showLogin();
   }
-  return await response.json();
+  jsonResponse = await response.json();
+  return jsonResponse;
 }
 
 async function getFromApi(endpoint, useToken){
@@ -462,8 +466,8 @@ async function loginFromApi(username, password) {
       console.log(response);
       if(response.statusCode === 200) {
         if (response.data && response.data.token) {
-            localStorage.setItem('token', response.data.token);
-            loadUserProfileTab();
+            setToken(response.data.token, document.getElementById('stay-logged').checked);
+            await loadUserProfileTab();
             return true;
         }
       }
@@ -486,22 +490,24 @@ async function getProfileFromApi(){
     if(response==null){
       return null;
     }
-    if(response.statusCode === 200){
-      setProfile(response.data);
-      return response.data;
-    } else if(response.statusCode == 401){
-      localStorage.removeItem('token');
-      showLogin();
-      return null;
+    switch(response.statusCode){
+      case 200:
+        setProfile(response.data);
+        return response.data;
+      case 401:
+        response.data.token;
+        showLogin();
+        return null;
+      default:
+        return null;
     }
-    return null;
   } catch (error) {
     console.error('Error:', error);
   }
 }
 
 async function getProfileFromApiInBackground(){
-  if(localStorage.getItem('token')==null){
+  if(getToken()==null){
     return;
   }
   const endpoint = "/profile";
@@ -527,8 +533,13 @@ async function getTaxonFromApi(taxon){
     if(response==null){
       return null;
     }
-    if(response.statusCode === 200){
-      return response.data;
+    switch(response.statusCode){
+      case 200:
+        return response.data;
+      case 404:
+        return null;
+      case 401:
+        return {statusCode:401};
     }
     return null;
   } catch (error) {
@@ -653,6 +664,9 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
   var taxon = Cache.getInstance().getTaxon(searchValue);
   if (taxon == null) {
       taxon = await getTaxonFromApi(searchValue);
+      if (taxon.statusCode == 401) {
+        return;
+      }
   }
   container.innerHTML = "";
   if (taxon == null) {

@@ -46,14 +46,17 @@ class Router {
      */
     route(params) {
         console.log(params);
-        if (this.currentParameters && this.areParamsEqual(params, this.currentParameters)) return;
+        var tab = TabManager.getInstance().getTab(params.window);
+        if (this.currentParameters && this.areParamsEqual(params, this.currentParameters) && tab!=null){
+            return;
+        }
         let currentWindow = this.currentParameters ? this.currentParameters['window'] : null;
         this.setCurrent(params);
         if (params['window'] == null) {
             this.updateView('home');
-        } else if (params['window'] !== currentWindow) {
-            this.updateView(params['window']);
+            return;
         }
+        this.updateView(params['window']);
     }
 
     /**
@@ -163,14 +166,16 @@ class Router {
      * Establece varios parámetros en la URL
      * @param {*} params 
      */
-    setParams(params) {
+    setParams(params, redirect = true) {
         this.clearParams();
         console.log('setParams', params);
         Object.entries(params).forEach(([key, value]) => {
             this.params.set(key, value);
         });
         this.setURL();
-        this.route(this.getParams());
+        if(redirect) {
+            this.route(this.getParams());
+        }
     }
 
 
