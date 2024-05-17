@@ -602,19 +602,9 @@ async function createProfileTabContent(tabContentContainerReference) {
     }
 
     var userinfo = document.createElement("p");
-
-    var name = document.createElement("span");
-    name.textContent = profileData.name;
-    name.classList.add("user-name");
-    userinfo.appendChild(name);
-
-    var separator = document.createTextNode(" | ");
-    userinfo.appendChild(separator);
-
-    var username = document.createElement("span");
-    username.textContent = `@${profileData.username}`;
-    username.classList.add("user-username");
-    userinfo.appendChild(username);
+    userinfo.classList.add("identity");
+    userinfo.innerHTML = `<span class="user-name">${profileData.name}</span> <span class="user-username">@${profileData.username}</span>`;
+    tabContentContainerReference.appendChild(userinfo);
 
     var logoutButton = document.createElement("a");
     logoutButton.classList.add("btn","btn-primary", "lng");
@@ -627,7 +617,7 @@ async function createProfileTabContent(tabContentContainerReference) {
     });
     userinfo.appendChild(logoutButton);
 
-    tabContentContainerReference.appendChild(userinfo);
+    
     
   } catch (error) {
     console.error("Error parsing profile data:", error);
@@ -682,9 +672,9 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
   if (taxon == null) {
       taxon = await getTaxonFromApi(searchValue);
   }
-  container.innerHTML = "";
+  container.innerHTML = "<br/>";
   if (taxon == null) {
-      container.innerHTML = `<p>Taxon ${searchValue} was not found.<p>`;
+      container.innerHTML = `<hr/><p>Taxon ${searchValue} was not found.<p>`;
       if (previousTaxon) {
           var backLink = document.createElement("a");
           backLink.textContent = `< Volver a ${previousTaxon}`;
@@ -705,17 +695,19 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
 
   // Construir la jerarquía a partir del objeto taxon
   while (currentTaxon) {
-      hierarchyList.unshift(currentTaxon.name);
+      hierarchyList.unshift(currentTaxon);
       currentTaxon = currentTaxon.hierarchy || null;
   }
 
   for (let i = 0; i < hierarchyList.length; i++) {
       let tempTaxon = hierarchyList[i];
+      Cache.getInstance().addTaxon(tempTaxon.name, tempTaxon);
       var hierarchyElement = document.createElement("a");
-      hierarchyElement.textContent = tempTaxon;
+      hierarchyElement.textContent = tempTaxon.name;
+      hierarchyElement.title = tempTaxon.category.name;
       hierarchyElement.href = "#";
       hierarchyElement.addEventListener("click", function () {
-          searchTaxon(container, tempTaxon);
+          searchTaxon(container, tempTaxon.name);
       });
       hierarchyElement.classList.add("hierarchy-element");
       hierarchy.appendChild(hierarchyElement);
@@ -728,7 +720,7 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
 
   // Mostrar el nombre del taxón en un h2
   var taxonNameElement = document.createElement("p");
-  taxonNameElement.innerHTML = `<span class="taxon-level">${taxon.category.name}</span> - <span class="taxon-name">${taxon.name}</span>`;
+  taxonNameElement.innerHTML = `<br/><span class="taxon-name">${taxon.name}</span> - <span class="taxon-level">${taxon.category.name}</span>`;
   container.appendChild(taxonNameElement);
 
   var childrensLabel = document.createElement("p");
@@ -752,9 +744,16 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
       container.appendChild(childrenList);
   }
 
-  /*
+  if(taxon.description){
+    var descriptionContainer = document.createElement("div");
+    descriptionContainer.classList.add("description-container");
+    descriptionContainer.innerHTML = taxon.description;
+    container.appendChild(descriptionContainer);
+  }
+
+/*
   var taxonName = document.createElement("p");
   taxonName.textContent = JSON.stringify(taxon);
   container.appendChild(taxonName);
-  */
+*/
 }

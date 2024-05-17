@@ -27,6 +27,9 @@ class Cache {
     }
 
     addTaxonomicKey(key, taxonomicKey){
+        if(this.cache.taxonomicKeys[key] != null){
+            return;
+        }
         this.cache.taxonomicKeys[key] = taxonomicKey;
     }
 
@@ -41,6 +44,9 @@ class Cache {
     }
 
     addTaxon(id, taxon){
+        if(this.cache.taxons[id] != null){
+            return;
+        }
         this.cache.taxons[id] = taxon;
     }
 

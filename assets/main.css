@@ -92,8 +92,13 @@ body {
     justify-content: flex-end;
 }
 
-#logout-button{
-    margin-left: 2rem;
+.identity{
+    display: flex;
+    flex-direction: row;
+    column-gap: 1rem;
+    align-items: center;
+    row-gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .close_paragraph{
@@ -131,6 +136,27 @@ body {
     font-size: .8rem;
     margin: 0;
     padding: 0;
+}
+
+.taxon-level{
+    font-size: 1rem;
+}
+
+.taxon-name{
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.hierarchy-element{
+    padding: .5rem;
+    box-shadow: 0 0 3px 0px var(--border-light);
+    color: var(--color-secondary);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+}
+
+.hierarchy-element:hover {
+    filter: brightness(0.95);
 }
 
 @keyframes skew-y-shake {
