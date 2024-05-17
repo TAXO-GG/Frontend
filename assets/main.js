@@ -391,34 +391,39 @@ function clearProfile(){
 const baseApiUrl = 'http://localhost:6969';
 
 async function httpRequest(url, useToken, method, bodyParam = null, callback = null) {
-  setLoadingCursor();
-  const headers = {
-    'Accept': 'application/json',
-    'Content-Type': method !== 'GET' ? 'application/json' : undefined
-  };
-  if (useToken) {
-    const token = getToken();
-    if (!token) {
-      showLogin();
-      setNormalCursor();
-      return {statusCode:401};
-    } else {
-      headers['Authorization'] = 'Bearer ' + token;
+  try {
+    setLoadingCursor();
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': method !== 'GET' ? 'application/json' : undefined
+    };
+    if (useToken) {
+      const token = getToken();
+      if (!token) {
+        showLogin();
+        setNormalCursor();
+        return {statusCode:401};
+      } else {
+        headers['Authorization'] = 'Bearer ' + token;
+      }
     }
-  }
-  const options = {method, headers: new Headers(headers), body: bodyParam && method !== 'GET' ? JSON.stringify(bodyParam) : undefined};
-  const response = await fetch(url, options);
-  console.log("Base http response: ",response);
-  if(response == null){
+    const options = {method, headers: new Headers(headers), body: bodyParam && method !== 'GET' ? JSON.stringify(bodyParam) : undefined};
+    const response = await fetch(url, options);
+    console.log("Base http response: ",response);
+    if(response == null){
+      setNormalCursor();
+      return {statusCode:404};
+    } else if (response.status === 401) {
+      clearToken();
+      showLogin();
+    }
+    jsonResponse = await response.json();
     setNormalCursor();
-    return {statusCode:404};
-  } else if (response.status === 401) {
-    clearToken();
-    showLogin();
+    return jsonResponse;
+  } catch (error) {
+    setNormalCursor();
+    return {statusCode:500};
   }
-  jsonResponse = await response.json();
-  setNormalCursor();
-  return jsonResponse;
 }
 
 async function getFromApi(endpoint, useToken){
@@ -676,9 +681,6 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
   var taxon = Cache.getInstance().getTaxon(searchValue);
   if (taxon == null) {
       taxon = await getTaxonFromApi(searchValue);
-      if (taxon.statusCode == 401) {
-        return;
-      }
   }
   container.innerHTML = "";
   if (taxon == null) {
