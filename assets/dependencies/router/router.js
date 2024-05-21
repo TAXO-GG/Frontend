@@ -81,7 +81,7 @@ class Router {
             case "profile":
                 // Heredar y pasar n parámetro extra con datos del perfil
                 if(session.profile != null){
-                    TabManager.getInstance().createTab('profile', 'Profile', {window: 'profile'}, createProfileTabContent);
+                    TabManager.getInstance().createTab('profile', 29, {window: 'profile'}, createProfileTabContent);
                 } else {
                     loadUserProfileTab();
                 }

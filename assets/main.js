@@ -357,9 +357,9 @@ async function loadUserProfileTab(){
       console.error('Error loading profile');
       return;
     }
-    Router.getInstance().updateView('profile');
+    Router.getInstance().goTo('profile');
   } else{
-    Router.getInstance().updateView('profile');
+    Router.getInstance().goTo('profile');
   }
 }
 

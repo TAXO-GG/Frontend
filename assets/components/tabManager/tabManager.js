@@ -53,8 +53,7 @@ class Tab{
 
         this.tabReference.addEventListener("click", function(e){
             if (e.target.classList.contains("closeTab") || this.tabReference.classList.contains("active")) return;
-            this.setActive();
-            Router.getInstance().setParams(this.url); // Object params key:value
+            TabManager.getInstance().setActiveTab(this)
         }.bind(this));
         this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", function(e){
             this.close();
@@ -80,10 +79,6 @@ class Tab{
     }
 
     setActive(){
-        if(TabManager.getInstance().activeTab != null){
-            TabManager.getInstance().getActiveTab().removeActive();
-        }
-        TabManager.getInstance().setActiveTab(this);
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
 
@@ -95,11 +90,12 @@ class Tab{
             buttonsActive[i].classList.remove("active");
         }
 
+        this.updateUrl();
+
         var thisRelatedButton = buttons.querySelector(`[data-tab="${this.id}"]`);
         if(thisRelatedButton==null) return;
         thisRelatedButton.classList.add("active");
 
-        Router.getInstance().setParams(this.url, false);
     }
 
     removeActive(){
@@ -107,8 +103,7 @@ class Tab{
         this.tabContentContainerReference.classList.add("none");
     }
 
-    updateUrl(url){
-        this.url = url;
+    updateUrl(){
         Router.getInstance().setParams(this.url);
     }
 
@@ -171,7 +166,12 @@ class TabManager{
     }
 
     setActiveTab(tab){
+        if(tab == this.activeTab){
+            return;
+        }
+        if(this.activeTab!=null) this.activeTab.removeActive();
         this.activeTab = tab;
+        tab.setActive();
     }
 
     getActiveTab(){
@@ -185,15 +185,13 @@ class TabManager{
     async createTab(id, title, url, createContentFunction){
         var tab = this.getTab(id);
         if(tab != null){
-            tab.setActive();
-            console.log("calling set params: " + tab.params);
-            Router.getInstance().setParams(tab.url);
+            this.setActiveTab(tab);
             return tab;
         }
         tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction);
         await tab.init();
-        tab.setActive();
         this.tabReferences[id] = tab;
+        this.setActiveTab(tab);
         return tab;
     }
 
