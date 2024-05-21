@@ -7,8 +7,11 @@ class Modal{
     active;
     parentBuffer;
 
+    closeModalHandler;
+
     constructor(){
         this.active = false;
+        this.closeModalHandler = null;
     }
 
     init(){
@@ -59,14 +62,56 @@ class Modal{
         this.container.innerHTML = `<img id="AlertIcon" src="assets/img/alert.svg">\n<p id="AlertMessage">${message}</p>`;
     }
 
-    async closeModal(){
-       // this.modal.style.opacity = 0;
-        //setTimeout(function() {
-            this.modal.classList.add("none");
-            this.emptyModal();
-       //     this.modal.opacity = 1;
-        //}.bind(this), 500);
+    askForConfirmation(message) {
+        return new Promise((resolve, reject) => {
+            if (this.active) {
+                this.emptyModal();
+            } else {
+                this.showModal();
+            }
+            this.container.innerHTML = `
+                <img id="AlertIcon" src="assets/img/question.svg">
+                <p id="AlertMessage">${message}</p>
+            `;
+
+            let buttons = document.createElement("p");
+
+            let confirmationButton = document.createElement("a");
+            confirmationButton.id = "confirmation-button lng btn btn-primary";
+            confirmationButton.setAttribute('lng', 27);
+            confirmationButton.innerText = "Confirmar";
+            confirmationButton.classList.add();
+            buttons.appendChild(confirmationButton);
+
+            let cancelButton = document.createElement("a");
+            cancelButton.id = "cancel-button lng btn btn-primary";
+            cancelButton.setAttribute('lng', 28);
+            cancelButton.innerText = "Confirmar";
+            cancelButton.classList.add();
+            buttons.appendChild(cancelButton);
+
+            this.container.appendChild(buttons);
+
+            confirmationButton.onclick = () => {
+                this.closeModal().then(() => resolve(true));
+            };
+
+            cancelButton.onclick = () => {
+                this.closeModal().then(() => resolve(false));
+            };
+
+            this.closeModalHandler = () => resolve(false);
+        });
+    }
+
+    async closeModal() {
+        this.modal.classList.add("none");
+        this.emptyModal();
         this.active = false;
+        if (this.closeModalHandler) {
+            this.closeModalHandler();
+            this.closeModalHandler = null;
+        }
     }
 
 }
