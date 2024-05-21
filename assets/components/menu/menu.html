@@ -10,20 +10,20 @@
   </div>
   <div id="menu-utils" class="container fit v-center">
     <div id="menu-buttons" class="container fit">
-      <div id="home-btn" data-tab="home" class="box fit button" onclick="Router.getInstance().goTo('home')">
+      <div id="home-btn" data-tab="home" class="box fit button nav-button" onclick="Router.getInstance().goTo('home')">
         <p class="lng a-like" lng="2"></p>
       </div>
-      <div id="taxons-btn" data-tab="taxons" class="box fit button" onclick="Router.getInstance().goTo('taxons')">
+      <div id="taxons-btn" data-tab="taxons" class="box fit button nav-button" onclick="Router.getInstance().goTo('taxons')">
         <p class="lng a-like" lng="3"></p>
       </div>
-      <div id="keys-btn" data-tab="keys" class="box fit button" onclick="Router.getInstance().goTo('keys')">
+      <div id="keys-btn" data-tab="keys" class="box fit button nav-button" onclick="Router.getInstance().goTo('keys')">
         <p class="lng a-like" lng="4"></p>
       </div>
       <!--
-      <div id="id-btn" data-tab="id" class="box fit button" onclick="Router.getInstance().goTo('id')">
+      <div id="id-btn" data-tab="id" class="box fit button nav-button" onclick="Router.getInstance().goTo('id')">
         <p class="lng a-like" lng="5"></p>
       </div>
-      <div id="community-btn" data-tab="community" class="box fit button" onclick="Router.getInstance().goTo('community')">
+      <div id="community-btn" data-tab="community" class="box fit button nav-button" onclick="Router.getInstance().goTo('community')">
         <p class="lng a-like" lng="6"></p>
       </div>
     -->
@@ -38,7 +38,7 @@
       <div></div>
     </div>
     <div id="profile-container" class="fit" > <!-- onclick="Router.getInstance().goTo('profile')">-->
-      <div id="profile-button" class="borderLight button" onclick="loadUserProfileTab()">
+      <div id="profile-button" data-tab="profile" class="borderLight button nav-button" onclick="loadUserProfileTab()">
         <p id="profile-question-mark" class="a-like">?</p>
       </div>
     </div>

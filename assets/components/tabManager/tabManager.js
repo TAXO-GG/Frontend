@@ -82,17 +82,14 @@ class Tab{
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
 
-        var buttons = document.getElementById("menu-buttons");
-        if (buttons == null) return;
-        var buttonsActive = buttons.querySelectorAll(".active");
-        if (buttonsActive == null) return;
-        for(var i = 0; i < buttonsActive.length; i++) {
-            buttonsActive[i].classList.remove("active");
-        }
+        var activeButtons = document.querySelectorAll(".nav-button.active");
+        activeButtons.forEach(button => {
+            button.classList.remove("active");
+        });
 
         this.updateUrl();
 
-        var thisRelatedButton = buttons.querySelector(`[data-tab="${this.id}"]`);
+        var thisRelatedButton = document.querySelector(`[data-tab="${this.id}"]`);
         if(thisRelatedButton==null) return;
         thisRelatedButton.classList.add("active");
 

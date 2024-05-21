@@ -50,6 +50,10 @@
     box-shadow: inset 0 -3px 0 0px var(--color-secondary);
 }
 
+#profile-button.active{
+    box-shadow: var(--color-secondary) 0px 0px 0px 3px;
+}
+
 #menu-buttons > .button:hover{
     box-shadow: inset 0 -3px 0 0px var(--color-secondary);
 }

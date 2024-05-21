@@ -651,8 +651,9 @@ async function createProfileTabContent(tabContentContainerReference) {
     userinfo.appendChild(logoutButton);
 
     var updateProfilePictureDiv = document.createElement("div");
-    updateProfilePictureDiv.classList.add("flex");
-    updateProfilePictureDiv.innerHTML = "<input id='update-profile-image-input' class='lng none form-control search-box' lng='33' type='text'>";
+    updateProfilePictureDiv.classList.add("flex","gap-small");
+    var hideAux = 
+    updateProfilePictureDiv.innerHTML = "<a id='hide-profile-image-input' onclick=\"hide('#update-profile-image-input, #hide-profile-image-input')\" class='btn btn-primary button-cancel none'>X</a><input id='update-profile-image-input' class='lng none fit' lng='33' type='text'>";
     var updateProfilePictureButton = document.createElement("a");
     updateProfilePictureButton.classList.add("btn","btn-primary", "lng");
     updateProfilePictureButton.setAttribute("lng","32");
@@ -665,6 +666,10 @@ async function createProfileTabContent(tabContentContainerReference) {
       }
       if(input.classList.contains("none")){
         input.classList.remove("none");
+        var hideInput = document.getElementById('hide-profile-image-input');
+        if(hideInput){
+          hideInput.classList.remove("none");
+        }
         return;
       }
       var url = input.value;
