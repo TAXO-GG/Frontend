@@ -92,6 +92,14 @@ body {
     justify-content: flex-end;
 }
 
+.flex{
+    display: flex;
+}
+
+.padding-left{
+    padding-left: 1rem;
+}
+
 .identity{
     display: flex;
     flex-direction: row;
@@ -150,13 +158,23 @@ body {
 .hierarchy-element{
     padding: .5rem;
     box-shadow: 0 0 3px 0px var(--border-light);
-    color: var(--color-secondary);
+    color: var(--border-dark);
     border-radius: 6px;
     background-color: var(--bg-primary);
 }
 
 .hierarchy-element:hover {
     filter: brightness(0.95);
+}
+
+.descendence-list{
+    line-height: 1.5rem;
+    border-left: 1px solid var(--border-light);
+    margin-left: 1.2rem;
+    margin-top: -.8rem;
+    padding-top: .5rem;
+    padding-left: 1.5rem;
+    list-style: square;
 }
 
 @keyframes skew-y-shake {

@@ -380,6 +380,11 @@ function setProfile(profile){
 function clearProfile(){
   session.profile = null;
   show("#profile-question-mark");
+  var profileButton = document.getElementById("profile-button");
+  if(profileButton){
+    profileButton.style.backgroundImage = null;
+    profileButton.style.backgroundPosition = null;
+  }
 }
 
 /* * * * * * * * * * * *
@@ -564,6 +569,24 @@ async function getTaxonFromApi(taxon){
   }
 }
 
+async function updateProfilePicture(url){
+  const endpoint = "/profile/updateProfilePicture";
+  const data = {
+    picture: url
+  };
+  try {
+    const response = await postToApi(endpoint, data, true);
+    if(response==null){
+      return;
+    }
+    if(response.statusCode === 200){
+      document.getElementById('update-profile-image-input').classList.add("none");
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
 /* * * * * * * * * * *
  *                   *
  *   Main function   *
@@ -601,6 +624,16 @@ async function createProfileTabContent(tabContentContainerReference) {
       profileData = session.profile;
     }
 
+    var profilePicture = profileData.picture;
+    if(profilePicture && !profilePicture.isBlank()) {
+      var profileButton = document.getElementById("profile-button");
+      if(profileButton){
+        profileButton.style.backgroundImage = 'url("' + profilePicture + '")';
+        profileButton.style.backgroundPosition = 'center';
+      }
+    }
+
+
     var userinfo = document.createElement("p");
     userinfo.classList.add("identity");
     userinfo.innerHTML = `<span class="user-name">${profileData.name}</span> <span class="user-username">@${profileData.username}</span>`;
@@ -617,6 +650,31 @@ async function createProfileTabContent(tabContentContainerReference) {
     });
     userinfo.appendChild(logoutButton);
 
+    var updateProfilePictureDiv = document.createElement("div");
+    updateProfilePictureDiv.classList.add("flex");
+    updateProfilePictureDiv.innerHTML = "<input id='update-profile-image-input' class='lng none form-control search-box' lng='33' type='text'>";
+    var updateProfilePictureButton = document.createElement("a");
+    updateProfilePictureButton.classList.add("btn","btn-primary", "lng");
+    updateProfilePictureButton.setAttribute("lng","32");
+    updateProfilePictureButton.textContent = "Update profile picture";
+    updateProfilePictureButton.id = "update-profile-picture-button";
+    updateProfilePictureButton.addEventListener("click", function(){
+      var input = document.getElementById('update-profile-image-input');
+      if(!input){
+        return;
+      }
+      if(input.classList.contains("none")){
+        input.classList.remove("none");
+        return;
+      }
+      var url = input.value;
+      if(url.isBlank()){
+        return;
+      }
+      updateProfilePicture(url);
+    });
+    updateProfilePictureDiv.appendChild(updateProfilePictureButton);
+    tabContentContainerReference.appendChild(updateProfilePictureDiv);
     
     
   } catch (error) {
@@ -688,60 +746,70 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
   }
   Cache.getInstance().addTaxon(taxon.name, taxon);
 
-  var hierarchy = document.createElement("p");
+  if(taxon.hierarchy != null) {
 
-  let currentTaxon = taxon;
-  let hierarchyList = [];
+    var hierarchyLabel = document.createElement("h3");
+    hierarchyLabel.innerHTML = "<span class='lng' lng='30'>Hierarchy</span>:";
+    container.appendChild(hierarchyLabel);
 
-  // Construir la jerarquía a partir del objeto taxon
-  while (currentTaxon) {
-      hierarchyList.unshift(currentTaxon);
-      currentTaxon = currentTaxon.hierarchy || null;
+    var hierarchy = document.createElement("p");
+
+    let currentTaxon = taxon;
+    let hierarchyList = [];
+
+    // Construir la jerarquía a partir del objeto taxon
+    while (currentTaxon) {
+        hierarchyList.unshift(currentTaxon);
+        currentTaxon = currentTaxon.hierarchy || null;
+    }
+
+    for (let i = 0; i < hierarchyList.length; i++) {
+        let tempTaxon = hierarchyList[i];
+        Cache.getInstance().addTaxon(tempTaxon.name, tempTaxon);
+        var hierarchyElement = document.createElement("a");
+        hierarchyElement.textContent = tempTaxon.name;
+        hierarchyElement.title = tempTaxon.category.name;
+        hierarchyElement.href = "#";
+        hierarchyElement.addEventListener("click", function () {
+            searchTaxon(container, tempTaxon.name);
+        });
+        hierarchyElement.classList.add("hierarchy-element");
+        hierarchy.appendChild(hierarchyElement);
+        if (i < hierarchyList.length - 1) {
+            var separator = document.createTextNode(" > ");
+            hierarchy.appendChild(separator);
+        }
+    }
+    container.appendChild(hierarchy);
   }
-
-  for (let i = 0; i < hierarchyList.length; i++) {
-      let tempTaxon = hierarchyList[i];
-      Cache.getInstance().addTaxon(tempTaxon.name, tempTaxon);
-      var hierarchyElement = document.createElement("a");
-      hierarchyElement.textContent = tempTaxon.name;
-      hierarchyElement.title = tempTaxon.category.name;
-      hierarchyElement.href = "#";
-      hierarchyElement.addEventListener("click", function () {
-          searchTaxon(container, tempTaxon.name);
-      });
-      hierarchyElement.classList.add("hierarchy-element");
-      hierarchy.appendChild(hierarchyElement);
-      if (i < hierarchyList.length - 1) {
-          var separator = document.createTextNode(" > ");
-          hierarchy.appendChild(separator);
-      }
-  }
-  container.appendChild(hierarchy);
-
   // Mostrar el nombre del taxón en un h2
   var taxonNameElement = document.createElement("p");
   taxonNameElement.innerHTML = `<br/><span class="taxon-name">${taxon.name}</span> - <span class="taxon-level">${taxon.category.name}</span>`;
   container.appendChild(taxonNameElement);
 
-  var childrensLabel = document.createElement("p");
-  childrensLabel.textContent = "Childs:";
-  container.appendChild(childrensLabel);
+  if(taxon.children && taxon.children.length > 0){
+    var childrensLabel = document.createElement("h3");
+    childrensLabel.innerHTML = "<span class='lng padding-left' lng='31'>Childs</span>:";
+    container.appendChild(childrensLabel);
 
-  // Mostrar los hijos del taxón
-  if (taxon.children && taxon.children.length > 0) {
-      var childrenList = document.createElement("ul");
-      taxon.children.forEach(child => {
-          var childElement = document.createElement("li");
-          var childLink = document.createElement("a");
-          childLink.textContent = child.name;
-          childLink.href = "#";
-          childLink.addEventListener("click", function () {
-              searchTaxon(container, child.name, taxon.name);
-          });
-          childElement.appendChild(childLink);
-          childrenList.appendChild(childElement);
-      });
-      container.appendChild(childrenList);
+    // Mostrar los hijos del taxón
+    if (taxon.children && taxon.children.length > 0) {
+        var childrenList = document.createElement("ul");
+        childrenList.classList.add("descendence-list");
+        taxon.children.forEach(child => {
+            var childElement = document.createElement("li");
+            var childLink = document.createElement("a");
+            childLink.textContent = child.name;
+            childLink.title = child.category.name;
+            childLink.href = "#";
+            childLink.addEventListener("click", function () {
+                searchTaxon(container, child.name, taxon.name);
+            });
+            childElement.appendChild(childLink);
+            childrenList.appendChild(childElement);
+        });
+        container.appendChild(childrenList);
+    }
   }
 
   if(taxon.description){
@@ -756,4 +824,5 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
   taxonName.textContent = JSON.stringify(taxon);
   container.appendChild(taxonName);
 */
+  setLangTo(container);
 }
