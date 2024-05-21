@@ -631,8 +631,12 @@ async function createProfileTabContent(tabContentContainerReference) {
         profileButton.style.backgroundImage = 'url("' + profilePicture + '")';
         profileButton.style.backgroundPosition = 'center';
       }
-    }
 
+      var profilePictureElement = document.createElement("div");
+      profilePictureElement.classList.add("profile-picture-container");
+      profilePictureElement.style.backgroundImage = 'url("' + profilePicture + '")';
+      tabContentContainerReference.appendChild(profilePictureElement);
+    }
 
     var userinfo = document.createElement("p");
     userinfo.classList.add("identity");
@@ -650,9 +654,10 @@ async function createProfileTabContent(tabContentContainerReference) {
     });
     userinfo.appendChild(logoutButton);
 
+    
+
     var updateProfilePictureDiv = document.createElement("div");
     updateProfilePictureDiv.classList.add("flex","gap-small");
-    var hideAux = 
     updateProfilePictureDiv.innerHTML = "<a id='hide-profile-image-input' onclick=\"hide('#update-profile-image-input, #hide-profile-image-input')\" class='btn btn-primary button-cancel none'>X</a><input id='update-profile-image-input' class='lng none fit' lng='33' type='text'>";
     var updateProfilePictureButton = document.createElement("a");
     updateProfilePictureButton.classList.add("btn","btn-primary", "lng");
@@ -757,7 +762,8 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
     hierarchyLabel.innerHTML = "<span class='lng' lng='30'>Hierarchy</span>:";
     container.appendChild(hierarchyLabel);
 
-    var hierarchy = document.createElement("p");
+    var hierarchy = document.createElement("div");
+    hierarchy.classList.add("hierarchy");
 
     let currentTaxon = taxon;
     let hierarchyList = [];
@@ -768,22 +774,19 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
         currentTaxon = currentTaxon.hierarchy || null;
     }
 
-    for (let i = 0; i < hierarchyList.length; i++) {
+    for (let i = 0; i < hierarchyList.length - 1; i++) {
         let tempTaxon = hierarchyList[i];
         Cache.getInstance().addTaxon(tempTaxon.name, tempTaxon);
+        var arrow = document.createElement("div");
+        arrow.classList.add("arrow", "hierarchy-element");
+        arrow.title = tempTaxon.category.name;
+        hierarchy.appendChild(arrow);
         var hierarchyElement = document.createElement("a");
         hierarchyElement.textContent = tempTaxon.name;
-        hierarchyElement.title = tempTaxon.category.name;
-        hierarchyElement.href = "#";
-        hierarchyElement.addEventListener("click", function () {
+        arrow.addEventListener("click", function () {
             searchTaxon(container, tempTaxon.name);
         });
-        hierarchyElement.classList.add("hierarchy-element");
-        hierarchy.appendChild(hierarchyElement);
-        if (i < hierarchyList.length - 1) {
-            var separator = document.createTextNode(" > ");
-            hierarchy.appendChild(separator);
-        }
+        arrow.appendChild(hierarchyElement);
     }
     container.appendChild(hierarchy);
   }
