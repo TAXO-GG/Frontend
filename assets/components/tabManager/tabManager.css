@@ -39,6 +39,7 @@
 
 }
 .tabContent{
+    background: var(--bg-primary);
     padding: 2rem;
     padding-top: 1rem;
 }

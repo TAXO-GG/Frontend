@@ -1,0 +1,11 @@
+:root {
+    --bg-primary: rgb(48, 48, 48);
+    --bg-secondary: #1c1c1c;
+    --border-light: #67676767;
+    --border-dark: #75757596;
+    --color-primary: rgb(0, 0, 0);
+    --color-secondary: #cfb13f;
+    --text-primary: rgb(255, 255, 255);
+    --text-secondary: rgb(255, 255, 255);
+    --font-size: 16px;
+}

@@ -375,6 +375,7 @@ async function logout() {
 function setProfile(profile){
   session.profile = profile;
   hide("#profile-question-mark");
+  setProfilePicture(profile)
 }
 
 function clearProfile(){
@@ -540,8 +541,7 @@ async function getProfileFromApiInBackground(){
       return;
     }
     if(response.statusCode === 200){
-      session.profile = response.data;
-      hide("#profile-question-mark");
+      setProfile(response.data);
     } 
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -569,6 +569,27 @@ async function getTaxonFromApi(taxon){
   }
 }
 
+function setProfilePicture(profile){
+  var profilePicture = profile.picture;
+  var defaultImage = false;
+
+  if(!profilePicture || profilePicture.isBlank()){
+    profilePicture = "assets/img/user.svg";
+    var defaultImage = true;
+  }
+
+  var profileButton = document.getElementById("profile-button");
+  if(profileButton){
+    profileButton.style.backgroundImage = 'url("' + profilePicture + '")';
+    if(!defaultImage) profileButton.style.backgroundPosition = 'center';
+  }
+
+  var profileImageDiv = document.getElementById("profile-picture-container");
+  if(profileImageDiv){
+    profileImageDiv.style.backgroundImage = 'url("' + profilePicture + '")';
+  }
+}
+
 async function updateProfilePicture(url){
   const endpoint = "/profile/updateProfilePicture";
   const data = {
@@ -580,7 +601,8 @@ async function updateProfilePicture(url){
       return;
     }
     if(response.statusCode === 200){
-      document.getElementById('update-profile-image-input').classList.add("none");
+      hide('#update-profile-image-input, #hide-profile-image-input')
+      getProfileFromApiInBackground();
     }
   } catch (error) {
     console.error('Error:', error);
@@ -624,24 +646,28 @@ async function createProfileTabContent(tabContentContainerReference) {
       profileData = session.profile;
     }
 
+    var x = document.createElement("div");
+    tabContentContainerReference.appendChild(x);
+    var userinfo = document.createElement("div");
+    userinfo.classList.add("profile");
     var profilePicture = profileData.picture;
-    if(profilePicture && !profilePicture.isBlank()) {
-      var profileButton = document.getElementById("profile-button");
-      if(profileButton){
-        profileButton.style.backgroundImage = 'url("' + profilePicture + '")';
-        profileButton.style.backgroundPosition = 'center';
-      }
-
-      var profilePictureElement = document.createElement("div");
-      profilePictureElement.classList.add("profile-picture-container");
-      profilePictureElement.style.backgroundImage = 'url("' + profilePicture + '")';
-      tabContentContainerReference.appendChild(profilePictureElement);
+    if(!profilePicture || profilePicture.isBlank()){
+      profilePicture = "assets/img/user.svg";
     }
+    if(profilePicture && !profilePicture.isBlank()) {
+      var profilePictureElement = document.createElement("div");
+      profilePictureElement.id = "profile-picture-container";
+      profilePictureElement.style.backgroundImage = 'url("' + profilePicture + '")';
+      userinfo.appendChild(profilePictureElement);
+    }
+    var userdata = document.createElement("div");
+    userdata.classList.add("identity");
 
-    var userinfo = document.createElement("p");
-    userinfo.classList.add("identity");
-    userinfo.innerHTML = `<span class="user-name">${profileData.name}</span> <span class="user-username">@${profileData.username}</span>`;
-    tabContentContainerReference.appendChild(userinfo);
+    userdata.innerHTML = `<span class="user-name">${profileData.name}</span> <span class="user-username">@${profileData.username}</span>`;
+    
+    x.appendChild(userinfo);
+    userinfo.appendChild(userdata);
+    
 
     var logoutButton = document.createElement("a");
     logoutButton.classList.add("btn","btn-primary", "lng");
@@ -652,12 +678,12 @@ async function createProfileTabContent(tabContentContainerReference) {
       logout();
       Router.getInstance().updateView('home');
     });
-    userinfo.appendChild(logoutButton);
+    userdata.appendChild(logoutButton);
 
     
 
     var updateProfilePictureDiv = document.createElement("div");
-    updateProfilePictureDiv.classList.add("flex","gap-small");
+    updateProfilePictureDiv.classList.add("flex","gap-small", "change-picture-div");
     updateProfilePictureDiv.innerHTML = "<a id='hide-profile-image-input' onclick=\"hide('#update-profile-image-input, #hide-profile-image-input')\" class='btn btn-primary button-cancel none'>X</a><input id='update-profile-image-input' class='lng none fit' lng='33' type='text'>";
     var updateProfilePictureButton = document.createElement("a");
     updateProfilePictureButton.classList.add("btn","btn-primary", "lng");
@@ -684,7 +710,7 @@ async function createProfileTabContent(tabContentContainerReference) {
       updateProfilePicture(url);
     });
     updateProfilePictureDiv.appendChild(updateProfilePictureButton);
-    tabContentContainerReference.appendChild(updateProfilePictureDiv);
+    x.appendChild(updateProfilePictureDiv);
     
     
   } catch (error) {

@@ -74,6 +74,10 @@
     align-items: center;
 }
 
+.change-picture-div{
+    margin-top: 1rem;
+}
+
 #profile-button p {
     color: var(--bg-primary);
     font-family: sans-serif;
