@@ -680,6 +680,25 @@ async function getKey(id){
   }
 }
 
+async function updateKey(taxonomicKey){
+  const endpoint = "/key/update";
+  var data = {
+    key: taxonomicKey
+  };
+  console.log("Updating key from: ", endpoint, data);
+  try {
+    const response = await postToApi(endpoint, data, true);
+    if(response==null){
+      return;
+    }
+    if(response.statusCode === 200){
+      console.log("Key updated successfully");
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
 /* * * * * * * * * * *
  *                   *
  *   Main function   *
@@ -949,7 +968,7 @@ async function createKeysTabContent(tabContentContainerReference){
   var createNewKeyButton = document.createElement("a");
   createNewKeyButton.classList.add("btn","btn-primary", "lng");
   createNewKeyButton.setAttribute("lng","38");
-  createNewKeyButton.textContent = "Create new key";
+  createNewKeyButton.textContent = "New taxonomic key";
   createNewKeyButton.id = "create-new-key-button";
   tabContentContainerReference.appendChild(createNewKeyButton);
 
@@ -982,7 +1001,7 @@ async function updateUserKeys(){
   }
 
   if(keysResponse == null || (keysResponse.userKeys.length == 0 && keysResponse.keysSharedWithUser.length == 0)){
-    keysDiv.insertAdjacentHTML('beforeend', "<p class='lng' lng='37'>You don't have any keys yet.</p>");
+    keysDiv.insertAdjacentHTML('beforeend', "<p class='lng' lng='36'>You don't have any taxonomic keys yet</p>");
     return;
   }
 
@@ -992,7 +1011,7 @@ async function updateUserKeys(){
     var userKeysDiv = document.createElement("div");
     userKeysDiv.classList.add("user-keys");
     keysDiv.appendChild(userKeysDiv);
-    userKeysDiv.innerHTML = "<h2 class='lng' lng='38'>Your keys:</h2>";
+    userKeysDiv.innerHTML = "<h2 class='lng' lng='37'>Your taxonomic keys</h2>";
     userKeys.forEach(key => {
       userKeysDiv.appendChild(createKeyListElement(key));
     });
@@ -1004,7 +1023,7 @@ async function updateUserKeys(){
     var keysSharedWithUserDiv = document.createElement("div");
     keysSharedWithUserDiv.classList.add("shared-keys");
     keysDiv.appendChild(keysSharedWithUserDiv);
-    keysSharedWithUserDiv.innerHTML = "<h2 class='lng' lng='39'>Keys shared with you:</h2>";
+    keysSharedWithUserDiv.innerHTML = "<h2 class='lng' lng='39'>Shared with you:</h2>";
     keysSharedWithUser.forEach(key => {
       keysSharedWithUserDiv.appendChild(createKeyListElement(key));
     });
@@ -1046,6 +1065,174 @@ function createKeyListElement(keyItem){
 }
 
 
-async function createKeyTabContent(){
-  
+async function createKeyTabContent(tabContentContainerReference, key){
+  if(key == null || tabContentContainerReference == null){
+    return;
+  }
+  KeyEditor.createKeyEditor(tabContentContainerReference, key);
+}
+
+class KeyEditor{
+
+  key;
+  container;
+
+  constructor(container, key){
+    this.key = key;
+    this.container = container;
+  }
+
+  init(){
+    var key = this.key;
+
+    var saveButtonContainer = document.createElement("div");
+    saveButtonContainer.classList.add("save-button-container");
+    this.container.appendChild(saveButtonContainer);
+
+    var saveButton = document.createElement('a');
+    saveButton.classList.add("btn","btn-primary","lng");
+    saveButton.setAttribute("lng","47");
+    saveButton.textContent = "Save changes";
+    saveButton.addEventListener('click', () => this.save());
+    saveButtonContainer.appendChild(saveButton);
+
+    this.container.insertAdjacentHTML('beforeend', "<h5><span class='lng' lng='40'>Title</span>:</h5>");
+    var title = document.createElement('h3');
+    title.textContent = key.title;
+    this.container.appendChild(title);
+    TextEditor.associate(title, this.key.title, this.container, function(){
+      key.title = this.value;
+      console.log(key.title);
+    });
+    this.container.insertAdjacentHTML('beforeend', "<h5><span class='lng' lng='44'>Description</span>:</h5>");
+    var description = document.createElement('h4');
+    description.textContent = key.description;
+    this.container.appendChild(description);
+    TextEditor.associate(description, this.key.description, this.container, function(){
+      key.description = this.value;
+      console.log(key.description);
+    });
+  }
+
+  static createKeyEditor(container, key){
+    var editor = new KeyEditor(container, key);
+    editor.init();
+    return editor;
+  }
+
+  save(){
+    updateKey(this.key);
+  }
+
+}
+
+class TextEditor{
+
+  associatedElement;
+  submitFunction;
+  textBuffer;
+  value;
+  mainContainerElement;
+  codeAllowed;
+
+  editorElement;
+
+  contentContainer;
+
+  constructor(associatedElement, value, mainContainerElement, submitFunction, codeAllowed){
+    this.associatedElement = associatedElement;
+    this.value = value;
+    this.mainContainerElement = mainContainerElement;
+    this.submitFunction = submitFunction;
+    submitFunction = submitFunction.bind(this);
+    this.codeAllowed = codeAllowed;
+  }
+
+  init(){
+    this.submitFunction = this.submitFunction.bind(this);
+    this.contentContainer = document.createElement("div");
+    this.contentContainer.classList.add("none");
+    this.mainContainerElement.appendChild(this.contentContainer);
+    this.contentContainer.classList.add("text-editor");
+
+    var cancelButton = document.createElement("a");
+    cancelButton.classList.add("btn","btn-primary","button-cancel");
+    cancelButton.textContent = "X";
+    cancelButton.addEventListener("click", () => this.hideEditor());
+    this.contentContainer.appendChild(cancelButton);
+    
+    if(this.codeAllowed){
+      this.editorElement = document.createElement("textarea");
+
+      
+    } else{
+      this.editorElement = document.createElement("input");
+      this.editorElement.type = "text";
+      this.editorElement.textContent = this.value;
+      this.contentContainer.appendChild(this.editorElement);
+    }
+    this.contentContainer.appendChild(this.editorElement);
+
+    
+
+
+    var submitButton =  document.createElement("a");
+    submitButton.classList.add("btn","btn-primary","btn-submit");
+    submitButton.textContent = "V";
+    this.contentContainer.appendChild(submitButton);
+
+    if(this.codeAllowed){
+      submitButton.addEventListener("click", () => this.submitWithCode());
+    } else {
+      submitButton.addEventListener("click", () => this.submit());
+    }
+   
+    this.associatedElement.insertAdjacentElement("afterend", this.contentContainer);
+    this.mainContainerElement.appendChild(this.contentContainer);
+
+    this.associatedElement.addEventListener("click", () => this.showEditor());
+    this.associatedElement.classList.add("editable");
+  }
+
+  submit(){
+    this.value = this.editorElement.value;
+    this.submitFunction();
+    this.associatedElement.textContent = this.value;
+    this.hideEditor();
+  }
+
+  submitWithCode(){
+
+    this.submitFunction();
+  }
+
+  hideEditor(){
+    this.contentContainer.classList.add("none");
+    this.associatedElement.classList.remove("none");
+  }
+
+  showEditor(){
+    this.associatedElement.classList.add("none");
+    this.contentContainer.classList.remove("none");
+
+    if(this.codeAllowed) {
+      /*
+      this.editor = CodeMirror.fromTextArea(this.editorElement, {
+        lineNumbers: true,
+        mode: "javascript"
+      });*/
+    } else {
+      this.editorElement.value = this.value;
+    }
+  }
+
+  static associate(element, value, mainContainerElement, submitFunction, codeAllowed = false) {
+    if(element.associatedEditor != null){
+      return false;
+    }
+    var textEditor = new TextEditor(element, value, mainContainerElement, submitFunction, codeAllowed);
+    textEditor.init();
+    element.associatedEditor = textEditor;
+    return true;
+  }
 }

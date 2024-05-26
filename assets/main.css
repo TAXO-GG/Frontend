@@ -344,6 +344,33 @@ input[type="text"], input[type="password"]{
     text-align: center;
 }
 
+.editable{
+    padding: .3rem;
+    padding-left: 1rem;
+    cursor: pointer;
+    border-radius: 1rem;
+}
+
+.editable:hover{
+    text-shadow: 0 0 2px var(--color-secondary);
+    box-shadow: 0px 0px 3px 0px var(--border-light);
+}
+
+.text-editor{
+    display: flex;
+    column-gap: .5rem;
+}
+
+.text-editor input{
+    width: calc(100% - 2rem);
+}
+
+.save-button-container{
+    display: flex;
+    justify-content: flex-end;
+    column-gap: 1rem;
+}
+
 @media (max-width: 1200px) {
 
     .twoColumns {

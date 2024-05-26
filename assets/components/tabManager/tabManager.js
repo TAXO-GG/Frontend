@@ -12,7 +12,9 @@ class Tab{
     createContentFunction;
     updateContentFunction;
 
-    constructor(id, url, title, tabsContainerReference, tabsContentContainerReference, createContentFunction, updateContentFunction){
+    data;
+
+    constructor(id, url, title, tabsContainerReference, tabsContentContainerReference, createContentFunction, updateContentFunction, data){
         this.id = id;
         this.url = url;
         this.title = title;
@@ -20,6 +22,7 @@ class Tab{
         this.tabsContentContainerReference = tabsContentContainerReference;
         this.createContentFunction = createContentFunction;
         this.updateContentFunction = updateContentFunction;
+        this.data = data;
     }
 
     async init(){
@@ -74,7 +77,7 @@ class Tab{
         this.tabContentContainerReference.appendChild(p);
 
         if(this.createContentFunction && this.createContentFunction instanceof Function && this.tabContentContainerReference){
-            await this.createContentFunction(this.tabContentContainerReference);
+            await this.createContentFunction(this.tabContentContainerReference, this.data);
         }
 
         setLangTo(this.tabContentContainerReference);
@@ -108,7 +111,7 @@ class Tab{
     }
 
     updateUrl(){
-        Router.getInstance().setParams(this.url);
+        Router.getInstance().setParams(this.url, false);
     }
 
     async close(){
@@ -187,13 +190,13 @@ class TabManager{
         return this.tabReferences[id];
     }
 
-    async createTab(id, title, url, createContentFunction, updateContentFunction){
+    async createTab(id, title, url, createContentFunction, updateContentFunction, params){
         var tab = this.getTab(id);
         if(tab != null){
             this.setActiveTab(tab);
             return null;
         }
-        tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction, updateContentFunction);
+        tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction, updateContentFunction, params);
         await tab.init();
         this.tabReferences[id] = tab;
         this.setActiveTab(tab);

@@ -100,12 +100,7 @@ class Router {
                 var key = response.data;
 
                 console.log("key: ", key);
-
-                var keyTitle = key.title;
-                if(keyTitle == null){
-                    keyTitle =keyId;
-                }
-                var tab = await TabManager.getInstance().createTab(`key-${keyId}`, keyTitle, params);
+                var tab = await TabManager.getInstance().createTab(`key-${keyId}`, keyId, params, createKeyTabContent, null, key);
                 if(tab) addOpenUserTab(tab);
                 break;
             case "home":
