@@ -10,14 +10,16 @@ class Tab{
     tabsContentContainerReference;
 
     createContentFunction;
+    updateContentFunction;
 
-    constructor(id, url, title, tabsContainerReference, tabsContentContainerReference, createContentFunction){
+    constructor(id, url, title, tabsContainerReference, tabsContentContainerReference, createContentFunction, updateContentFunction){
         this.id = id;
         this.url = url;
         this.title = title;
         this.tabsContainerReference = tabsContainerReference;
         this.tabsContentContainerReference = tabsContentContainerReference;
         this.createContentFunction = createContentFunction;
+        this.updateContentFunction = updateContentFunction;
     }
 
     async init(){
@@ -55,8 +57,8 @@ class Tab{
             if (e.target.classList.contains("closeTab") || this.tabReference.classList.contains("active")) return;
             TabManager.getInstance().setActiveTab(this)
         }.bind(this));
-        this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", function(e){
-            this.close();
+        this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", async function(e){
+            await this.close();
         }.bind(this));
     }
 
@@ -78,7 +80,12 @@ class Tab{
         setLangTo(this.tabContentContainerReference);
     }
 
-    setActive(){
+    async setActive(){
+
+        if(this.updateContentFunction && this.updateContentFunction instanceof Function){
+            await this.updateContentFunction();
+        }
+
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
 
@@ -95,7 +102,7 @@ class Tab{
 
     }
 
-     async removeActive(){
+    async removeActive(){
         this.tabReference.classList.remove("active");
         this.tabContentContainerReference.classList.add("none");
     }
@@ -104,13 +111,14 @@ class Tab{
         Router.getInstance().setParams(this.url);
     }
 
-    close(){
+    async close(){
+        removeOpenUserTab(this);
         let activeTab = TabManager.getInstance().getActiveTab();
         delete session.tabManager.tabReferences[this.id];
         if(activeTab != null){
             if(this.id == activeTab.id){
                 var lastTab = TabManager.getInstance().getLastTab();
-                if(lastTab!=null) lastTab.setActive();
+                if(lastTab!=null) await lastTab.setActive();
             }
         }
         this.tabsContainerReference.removeChild(this.tabReference);
@@ -168,7 +176,7 @@ class TabManager{
         }
         if(this.activeTab!=null) await this.activeTab.removeActive();
         this.activeTab = tab;
-        tab.setActive();
+        await tab.setActive();
     }
 
     getActiveTab(){
@@ -179,13 +187,13 @@ class TabManager{
         return this.tabReferences[id];
     }
 
-    async createTab(id, title, url, createContentFunction){
+    async createTab(id, title, url, createContentFunction, updateContentFunction){
         var tab = this.getTab(id);
         if(tab != null){
             this.setActiveTab(tab);
-            return tab;
+            return null;
         }
-        tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction);
+        tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction, updateContentFunction);
         await tab.init();
         this.tabReferences[id] = tab;
         this.setActiveTab(tab);

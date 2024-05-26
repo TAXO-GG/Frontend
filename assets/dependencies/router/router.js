@@ -44,48 +44,73 @@ class Router {
      * @param {*} params 
      * @returns 
      */
-    route(params) {
+    async route(params) {
+        /*
         var tab = TabManager.getInstance().getTab(params.window);
         if (this.currentParameters && this.areParamsEqual(params, this.currentParameters) && tab!=null){
             return;
-        }
+        }*/
         let currentWindow = this.currentParameters ? this.currentParameters['window'] : null;
         this.setCurrent(params);
         if (params['window'] == null) {
-            this.updateView('home');
+            await this.updateView({window:'home'});
             return;
         }
-        this.updateView(params['window']);
+        await this.updateView(params);
     }
 
     /**
      * Actualiza la vista basada en la ventana especificada en los parámetros
      * @param {*} view 
      */
-    updateView(view) {
+    async updateView(params) {
+        var view = params['window'];
         switch (view) {
-            
             case "taxons":
-                TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'}, createTaxonsTabContent);
+                await TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'}, createTaxonsTabContent);
                 break;
             case "keys":
-                TabManager.getInstance().createTab('keys', 4, {window: 'keys'}, createKeysTabContent);
+                var tab = await TabManager.getInstance().createTab('keys', 4, {window: 'keys'}, createKeysTabContent, updateUserKeys);
+                if(tab) addOpenUserTab(tab);
                 break;
             case "id":
                 break;
             case "community":
                 break;
             case "profile":
-                // Heredar y pasar n parámetro extra con datos del perfil
                 if(session.profile != null){
-                    TabManager.getInstance().createTab('profile', 29, {window: 'profile'}, createProfileTabContent);
+                    var tab = await TabManager.getInstance().createTab('profile', 29, {window: 'profile'}, createProfileTabContent);
+                    if(tab) addOpenUserTab(tab);
                 } else {
                     loadUserProfileTab();
                 }
                 break;
+            case "key":
+                var keyId = params['id'];
+                if(keyId == null){
+                    return;
+                }
+                var response = await getKey(keyId);
+
+                if(response == null || response.statusCode != 200){
+                    await TabManager.getInstance().createTab('home', 2, {window: 'home'}, createHomeTabContent);
+                    return;
+                }
+
+                var key = response.data;
+
+                console.log("key: ", key);
+
+                var keyTitle = key.title;
+                if(keyTitle == null){
+                    keyTitle =keyId;
+                }
+                var tab = await TabManager.getInstance().createTab(`key-${keyId}`, keyTitle, params);
+                if(tab) addOpenUserTab(tab);
+                break;
             case "home":
             default:
-                TabManager.getInstance().createTab('home', 2, {window: 'home'}, createHomeTabContent);
+                await TabManager.getInstance().createTab('home', 2, {window: 'home'}, createHomeTabContent);
         }
     }
 
@@ -94,10 +119,11 @@ class Router {
         this.setParam("window", view);
     }
 
-    goToUrl(url){
-        url = new URL(url);
-        params = url.searchParams;
-        route(params);
+    goToUrl(url) {
+        const fullUrl = new URL(baseUrl+url);
+        const params = fullUrl.searchParams;
+        console.log(params);
+        this.route(params);
     }
 
     /**

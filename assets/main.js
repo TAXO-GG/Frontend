@@ -1,3 +1,27 @@
+baseUrl = window.location.origin;
+let openUserTabs = [];
+
+function addOpenUserTab(tab) {
+  if (tab && !openUserTabs.includes(tab)) {
+    openUserTabs.push(tab);
+  }
+}
+
+async function closeAllOpenUserTabs() {
+  await Router.getInstance().updateView({window:"home"});
+  while (openUserTabs.length > 0) {
+    const tab = openUserTabs.pop();
+    await tab.close();
+  }
+}
+
+function removeOpenUserTab(tab) {
+  const tabIndex = openUserTabs.indexOf(tab);
+  if (tab && tabIndex !== -1) {
+    openUserTabs.splice(tabIndex, 1);
+  }
+}
+
 /* * * * * * * * * * * * *
  *                       *
  *   Useful functions    *
@@ -375,10 +399,7 @@ async function loadUserProfileTab(){
 async function logout() {
   clearToken();
   clearProfile();
-  var profileTab = TabManager.getInstance().getTab('profile');
-  if (profileTab != null) {
-    profileTab.close();
-  }
+  closeAllOpenUserTabs();
 }
 
 function setProfile(profile){
@@ -637,6 +658,28 @@ async function getUserKeys(){
   }
 }
 
+async function getKey(id){
+  const endpoint = `/key/${id}`;
+  console.log("Getting key from: ", endpoint);
+  try {
+    const response = await getFromApi(endpoint, true);
+    if(response==null){
+      return null;
+    }
+    switch(response.statusCode){
+      case 200:
+        return response;
+      case 404:
+        return null;
+      case 401:
+        return {statusCode:401};
+    }
+    return null;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
 /* * * * * * * * * * *
  *                   *
  *   Main function   *
@@ -717,7 +760,6 @@ async function createProfileTabContent(tabContentContainerReference) {
     logoutButton.id = "logout-button";
     logoutButton.addEventListener("click", function(){
       logout();
-      Router.getInstance().updateView('home');
     });
     userdata.appendChild(logoutButton);
 
@@ -903,12 +945,107 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
 }
 
 async function createKeysTabContent(tabContentContainerReference){
-  var keysDiv = document.createElement("div");
-  keysDiv.classList.add("keys-div");
-  keysDiv.innerHTML = "<h1 class='lng' lng='36'>Keys</h1><p class='lng' lng='37'>This section is under construction.</p>";
-  tabContentContainerReference.appendChild(keysDiv);
 
-  var userKeys = await getUserKeys();
-  console.log(userKeys);
+  var createNewKeyButton = document.createElement("a");
+  createNewKeyButton.classList.add("btn","btn-primary", "lng");
+  createNewKeyButton.setAttribute("lng","38");
+  createNewKeyButton.textContent = "Create new key";
+  createNewKeyButton.id = "create-new-key-button";
+  tabContentContainerReference.appendChild(createNewKeyButton);
+
+  var keysDiv = document.createElement("div");
+  keysDiv.id = "keys-div";
+  keysDiv.classList.add("twoColumns");
+  tabContentContainerReference.appendChild(keysDiv);
 }
 
+async function updateUserKeys(){
+  var keysDiv = document.getElementById("keys-div");
+  if(!keysDiv){
+    return;
+  }
+
+  var keysResponse = await getUserKeys();
+
+  keysDiv.innerHTML = "";
+
+  console.log(keysResponse);
+
+  if(keysResponse.statusCode != 200){
+
+  }
+
+  switch(keysResponse.statusCode){
+    case 401:
+      showLogin();
+      return;
+  }
+
+  if(keysResponse == null || (keysResponse.userKeys.length == 0 && keysResponse.keysSharedWithUser.length == 0)){
+    keysDiv.insertAdjacentHTML('beforeend', "<p class='lng' lng='37'>You don't have any keys yet.</p>");
+    return;
+  }
+
+  var userKeys = keysResponse.userKeys;
+
+  if(userKeys != null && userKeys.length > 0){
+    var userKeysDiv = document.createElement("div");
+    userKeysDiv.classList.add("user-keys");
+    keysDiv.appendChild(userKeysDiv);
+    userKeysDiv.innerHTML = "<h2 class='lng' lng='38'>Your keys:</h2>";
+    userKeys.forEach(key => {
+      userKeysDiv.appendChild(createKeyListElement(key));
+    });
+  }
+
+  var keysSharedWithUser = keysResponse.keysSharedWithUser;
+
+  if(keysSharedWithUser != null && keysSharedWithUser.length > 0){
+    var keysSharedWithUserDiv = document.createElement("div");
+    keysSharedWithUserDiv.classList.add("shared-keys");
+    keysDiv.appendChild(keysSharedWithUserDiv);
+    keysSharedWithUserDiv.innerHTML = "<h2 class='lng' lng='39'>Keys shared with you:</h2>";
+    keysSharedWithUser.forEach(key => {
+      keysSharedWithUserDiv.appendChild(createKeyListElement(key));
+    });
+  }
+}
+
+function createKeyListElement(keyItem){
+
+  var keyElement = document.createElement("div");
+  keyElement.classList.add("key-element");
+  
+  if(keyItem.title){
+    keyElement.innerHTML = `<p><span class='lng' lng='40'>Title</span>: ${keyItem.title}</p>`;
+  }
+  if(keyItem.author){
+    keyElement.insertAdjacentHTML('beforeend', `<p><span class='lng' lng='41'>Author</span>: ${keyItem.author}</p>`);
+  }
+  if(keyItem.created){
+    keyElement.insertAdjacentHTML('beforeend', `<p><span class='lng' lng='42'>Created</span>: ${keyItem.created}`);
+  }
+  if(keyItem.updated){
+    keyElement.insertAdjacentHTML('beforeend', `<span class='lng' lng='43'>Last update</span>: ${keyItem.updated}</p>`);
+  }
+  if(keyItem.description) {
+    keyElement.insertAdjacentHTML('beforeend', `<p><span class='lng' lng='44'>Description</span>: ${keyItem.description}</p>`);
+  }
+  if(keyItem.startTaxon){
+    keyElement.insertAdjacentHTML('beforeend', `<p><span class='lng' lng='45'>Starting taxon</span>: ${keyItem.startTaxon}</p>`);
+  }
+  if(keyItem.collaborators && keyItem.collaborators.length > 0) {
+    keyElement.insertAdjacentHTML('beforeend', `<p><span class='lng' lng='46'>Collaborators</span>: ${keyItem.collaborators.join(", ")}</p>`);
+  }
+
+  keyElement.addEventListener('click', function(){
+    Router.getInstance().setParams({window:"key",id:keyItem._id},true);
+  });
+
+  return keyElement;
+}
+
+
+async function createKeyTabContent(){
+  
+}
