@@ -26,7 +26,7 @@ class Tab{
     }
 
     async init(){
-
+        setLoadingCursor();
         // Tab element innit
         this.tabReference  = document.createElement("div");
         this.tabReference.className = "tab";
@@ -63,6 +63,7 @@ class Tab{
         this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", async function(e){
             await this.close();
         }.bind(this));
+        setNormalCursor();
     }
 
     async initTabContent(){
@@ -85,9 +86,7 @@ class Tab{
 
     async setActive(){
 
-        if(this.updateContentFunction && this.updateContentFunction instanceof Function){
-            await this.updateContentFunction();
-        }
+        setLoadingCursor();
 
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
@@ -102,7 +101,12 @@ class Tab{
         var thisRelatedButton = document.querySelector(`[data-tab="${this.id}"]`);
         if(thisRelatedButton==null) return;
         thisRelatedButton.classList.add("active");
-
+        
+        if(this.updateContentFunction && this.updateContentFunction instanceof Function){
+            await this.updateContentFunction();
+        }
+        
+        setNormalCursor();
     }
 
     async removeActive(){

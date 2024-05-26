@@ -289,12 +289,20 @@ function setToken(token, keepLoggedIn = true){
   localStorage.setItem('token', token);
 }
 
+function disableClicks(event) {
+  event.stopPropagation();
+  event.preventDefault();
+}
+
+
 function setLoadingCursor() {
   document.body.style.cursor = 'wait';
+  document.addEventListener('click', disableClicks, true);
 }
 
 function setNormalCursor() {
   document.body.style.cursor = 'default';
+  document.removeEventListener('click', disableClicks, true);
 }
 
 function hide(querySelector) {

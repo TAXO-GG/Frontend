@@ -331,10 +331,6 @@ input[type="text"], input[type="password"]{
     padding: 2rem;
 }
 
-.twoColumns > div:nth-child(even) {
-    box-shadow: -3px 0px 0px 0px var(--border-light);
-}
-
 #keys-div > div{
     box-sizing: border-box;
     width: 100%;
@@ -381,9 +377,6 @@ input[type="text"], input[type="password"]{
         padding: 1rem;
         padding-top: 0;
         padding-bottom: 0;
-    }
-    .twoColumns > div:nth-child(even) {
-        box-shadow: none;
     }
 
 }
