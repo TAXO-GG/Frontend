@@ -1036,6 +1036,8 @@ async function updateUserKeys(){
       keysSharedWithUserDiv.appendChild(createKeyListElement(key));
     });
   }
+
+  setNormalCursor();
 }
 
 function createKeyListElement(keyItem){
@@ -1078,6 +1080,7 @@ async function createKeyTabContent(tabContentContainerReference, key){
     return;
   }
   KeyEditor.createKeyEditor(tabContentContainerReference, key);
+  setNormalCursor();
 }
 
 class KeyEditor{
