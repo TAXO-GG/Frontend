@@ -985,6 +985,8 @@ async function createKeysTabContent(tabContentContainerReference){
   keysDiv.id = "keys-div";
   keysDiv.classList.add("twoColumns");
   tabContentContainerReference.appendChild(keysDiv);
+
+  updateUserKeys();
 }
 
 async function updateUserKeys(){
