@@ -88,20 +88,28 @@ class Router {
             case "key":
                 var keyId = params['id'];
                 if(keyId == null){
-                    return;
-                }
-                var response = await getKey(keyId);
-
-                if(response == null || response.statusCode != 200){
-                    await TabManager.getInstance().createTab('home', 2, {window: 'home'}, createHomeTabContent);
+                    setNormalCursor();
                     return;
                 }
 
-                var key = response.data;
+                var response;
+                var key;
+
+                if(TabManager.getInstance().getTab(`key-${keyId}`) == null){
+                    response = await getKey(keyId);
+                    if(response == null || response.statusCode != 200){
+                        await TabManager.getInstance().createTab('home', 2, {window: 'home'}, createHomeTabContent);
+                        setNormalCursor();
+                        return;
+                    }
+                    key = response.data;
+                }
 
                 console.log("key: ", key);
+
                 var tab = await TabManager.getInstance().createTab(`key-${keyId}`, keyId, params, createKeyTabContent, null, key);
                 if(tab) addOpenUserTab(tab);
+                setNormalCursor();
                 break;
             case "home":
             default:

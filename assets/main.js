@@ -303,6 +303,7 @@ function setLoadingCursor() {
 function setNormalCursor() {
   document.body.style.cursor = 'default';
   document.removeEventListener('click', disableClicks, true);
+  console.log('setNormalCursor');
 }
 
 function hide(querySelector) {

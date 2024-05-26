@@ -85,9 +85,6 @@ class Tab{
     }
 
     async setActive(){
-
-        setLoadingCursor();
-
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
 
@@ -105,8 +102,6 @@ class Tab{
         if(this.updateContentFunction && this.updateContentFunction instanceof Function){
             await this.updateContentFunction();
         }
-        
-        setNormalCursor();
     }
 
     async removeActive(){
@@ -197,7 +192,7 @@ class TabManager{
     async createTab(id, title, url, createContentFunction, updateContentFunction, params){
         var tab = this.getTab(id);
         if(tab != null){
-            this.setActiveTab(tab);
+            await this.setActiveTab(tab);
             return null;
         }
         tab = new Tab(id, url, title, this.tabsContainerReference, this.tabsContentContainerReference, createContentFunction, updateContentFunction, params);
