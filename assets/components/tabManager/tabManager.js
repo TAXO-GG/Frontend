@@ -45,7 +45,7 @@ class Tab{
 
         // Tab content innit
         this.tabContentContainerReference = document.createElement("div");
-        this.tabContentContainerReference.className = "tabContent";
+        this.tabContentContainerReference.classList.add("tabContent", "none");
         this.tabsContentContainerReference.appendChild(this.tabContentContainerReference);
         await this.initTabContent();
 
@@ -95,7 +95,7 @@ class Tab{
 
     }
 
-    removeActive(){
+     async removeActive(){
         this.tabReference.classList.remove("active");
         this.tabContentContainerReference.classList.add("none");
     }
@@ -162,11 +162,11 @@ class TabManager{
         return TabManager.instance;
     }
 
-    setActiveTab(tab){
+    async setActiveTab(tab){
         if(tab == this.activeTab){
             return;
         }
-        if(this.activeTab!=null) this.activeTab.removeActive();
+        if(this.activeTab!=null) await this.activeTab.removeActive();
         this.activeTab = tab;
         tab.setActive();
     }

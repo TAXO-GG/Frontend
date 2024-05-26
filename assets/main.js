@@ -32,6 +32,12 @@ String.prototype.capitalize = function(){
   return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
+isNullOrEmpty = function(str){
+  if (this == null || this == undefined) return true;
+  if (this.length == 0) return true;
+  return /^[ \t\n\r\x0B\x0C]*$/.test(this);
+}
+
 /* * * * * * * * * * * * * * * * * *
  *                                 *
  *   Import management functions   *
@@ -159,11 +165,14 @@ function setLangTo(parent) {
   const dictionary = langs.get(document.documentElement.getAttribute('lang'));
   const elements = parent.getElementsByClassName('lng');
   Array.from(elements).forEach(element => {
-    const translation = dictionary.get(element.getAttribute("lng")).trim();
-    if (element.tagName.toLowerCase() === 'input') {
-        element.setAttribute('placeholder', translation);
-    } else {
-        element.innerHTML = translation;
+    var translation = dictionary.get(element.getAttribute("lng"));
+    if (translation != null){
+      translation = translation.trim();
+      if (element.tagName.toLowerCase() === 'input') {
+          element.setAttribute('placeholder', translation);
+      } else {
+          element.innerHTML = translation;
+      }
     }
   });
 }
@@ -388,6 +397,27 @@ function clearProfile(){
   }
 }
 
+function setProfilePicture(profile){
+  var profilePicture = profile.picture;
+  var defaultImage = false;
+
+  if(!profilePicture || profilePicture.isBlank()){
+    profilePicture = "assets/img/user.svg";
+    var defaultImage = true;
+  }
+
+  var profileButton = document.getElementById("profile-button");
+  if(profileButton){
+    profileButton.style.backgroundImage = 'url("' + profilePicture + '")';
+    if(!defaultImage) profileButton.style.backgroundPosition = 'center';
+  }
+
+  var profileImageDiv = document.getElementById("profile-picture-container");
+  if(profileImageDiv){
+    profileImageDiv.style.backgroundImage = 'url("' + profilePicture + '")';
+  }
+}
+
 /* * * * * * * * * * * *
  *                     *
  *   Http  functions   *
@@ -503,8 +533,6 @@ async function loginFromApi(username, password) {
   }
 }
 
-
-
 async function getProfileFromApi(){
   const endpoint = "/profile";
   try {
@@ -569,27 +597,6 @@ async function getTaxonFromApi(taxon){
   }
 }
 
-function setProfilePicture(profile){
-  var profilePicture = profile.picture;
-  var defaultImage = false;
-
-  if(!profilePicture || profilePicture.isBlank()){
-    profilePicture = "assets/img/user.svg";
-    var defaultImage = true;
-  }
-
-  var profileButton = document.getElementById("profile-button");
-  if(profileButton){
-    profileButton.style.backgroundImage = 'url("' + profilePicture + '")';
-    if(!defaultImage) profileButton.style.backgroundPosition = 'center';
-  }
-
-  var profileImageDiv = document.getElementById("profile-picture-container");
-  if(profileImageDiv){
-    profileImageDiv.style.backgroundImage = 'url("' + profilePicture + '")';
-  }
-}
-
 async function updateProfilePicture(url){
   const endpoint = "/profile/updateProfilePicture";
   const data = {
@@ -604,6 +611,27 @@ async function updateProfilePicture(url){
       hide('#update-profile-image-input, #hide-profile-image-input')
       getProfileFromApiInBackground();
     }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+async function getUserKeys(){
+  const endpoint = '/key/list';
+  try {
+    const response = await getFromApi(endpoint, true);
+    if(response==null){
+      return null;
+    }
+    switch(response.statusCode){
+      case 200:
+        return response.data;
+      case 404:
+        return null;
+      case 401:
+        return {statusCode:401};
+    }
+    return null;
   } catch (error) {
     console.error('Error:', error);
   }
@@ -628,6 +656,19 @@ async function main(){
 }
 
 main();
+
+/* * * * * * * * * * * * * * * * * * * *
+ *                                     *
+ *   Tab content creation functions.   *
+ *                                     *
+ * * * * * * * * * * * * * * * * * * * */
+
+async function createHomeTabContent(tabContentContainerReference){
+  var homeDiv = document.createElement("div");
+  homeDiv.classList.add("home-div");
+  homeDiv.innerHTML = "<h1 class='lng' lng='34'>Welcome to TAXO.GG</h1><p class='lng' lng='35'>This is a simple web application to explore the taxonomy of living beings.</p>";
+  tabContentContainerReference.appendChild(homeDiv);
+}
 
 async function createProfileTabContent(tabContentContainerReference) {
   if(session.profile == null){
@@ -860,3 +901,14 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
 */
   setLangTo(container);
 }
+
+async function createKeysTabContent(tabContentContainerReference){
+  var keysDiv = document.createElement("div");
+  keysDiv.classList.add("keys-div");
+  keysDiv.innerHTML = "<h1 class='lng' lng='36'>Keys</h1><p class='lng' lng='37'>This section is under construction.</p>";
+  tabContentContainerReference.appendChild(keysDiv);
+
+  var userKeys = await getUserKeys();
+  console.log(userKeys);
+}
+

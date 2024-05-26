@@ -45,7 +45,6 @@ class Router {
      * @returns 
      */
     route(params) {
-        console.log(params);
         var tab = TabManager.getInstance().getTab(params.window);
         if (this.currentParameters && this.areParamsEqual(params, this.currentParameters) && tab!=null){
             return;
@@ -65,14 +64,12 @@ class Router {
      */
     updateView(view) {
         switch (view) {
-            case "home":
-                TabManager.getInstance().createTab('home', 2, {window: 'home'});
-                break;
+            
             case "taxons":
                 TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'}, createTaxonsTabContent);
                 break;
             case "keys":
-                TabManager.getInstance().createTab('keys', 4, {window: 'keys'});
+                TabManager.getInstance().createTab('keys', 4, {window: 'keys'}, createKeysTabContent);
                 break;
             case "id":
                 break;
@@ -86,9 +83,9 @@ class Router {
                     loadUserProfileTab();
                 }
                 break;
+            case "home":
             default:
-                console.log("No view specified or view not recognized");
-                TabManager.getInstance().createTab('home', 2, {window: 'home'});
+                TabManager.getInstance().createTab('home', 2, {window: 'home'}, createHomeTabContent);
         }
     }
 
@@ -168,7 +165,6 @@ class Router {
      */
     setParams(params, redirect = true) {
         this.clearParams();
-        console.log('setParams', params);
         Object.entries(params).forEach(([key, value]) => {
             this.params.set(key, value);
         });
