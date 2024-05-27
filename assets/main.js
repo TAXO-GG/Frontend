@@ -1175,7 +1175,7 @@ class KeyEditor{
     }
   }
 
-  createNode(key, index, container){
+  createNode(key, index, container, previousNodeDiv){
     var node = key.nodes[index];
     var nodeDiv = document.createElement("div");
     nodeDiv.classList.add("node");
@@ -1183,7 +1183,11 @@ class KeyEditor{
     for(var i = 0; i < node.paths.length; i++) {
       this.createPath(key, index, i, nodeDiv);
     }
-    container.appendChild(nodeDiv);
+    if(previousNodeDiv){
+      container.insertBefore(nodeDiv, previousNodeDiv);
+    } else {
+      container.appendChild(nodeDiv);
+    }
   }
 
   createPath(key, nodeIndex, pathIndex, container){

@@ -418,14 +418,18 @@ path > p {
     margin: 0;
 }
 
-p {
+p.editable {
+    margin-top: 21px;
+    margin-bottom: 21px;
     padding-top: 4.5px;
     padding-bottom: 4.5px;
 }
 
 .path .text-editor{
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-top: 4.8px;
+    padding-bottom: 4.8px;
 }
 
 @media (max-width: 1200px) {
