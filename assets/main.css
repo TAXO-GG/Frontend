@@ -410,8 +410,42 @@ input[type="text"], input[type="password"]{
     padding-bottom: 1.5rem;
 }
 
-.path{
+.node .path{
     padding-left: 1rem;
+    display: grid;
+    grid-auto-flow: column;
+    gap: .5rem;
+    column-count: 3;
+    grid-template-columns: 25px 1fr 25px;
+}
+
+.node.enabled .path{
+    grid-template-columns: 50px 1fr 25px;
+}
+
+.pathNumber{
+    padding-top: .45rem;
+}
+
+.margin-left{
+    margin-left: 1rem !important;
+}
+
+.node .add-path-button {
+    display: none;
+}
+
+.node.enabled .add-path-button {
+    display: block;
+}
+
+
+.node .button-delete-path {
+    display: none;
+}
+
+.node.enabled .button-delete-path{
+    display: inline;
 }
 
 path > p {

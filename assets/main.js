@@ -1094,6 +1094,7 @@ class KeyEditor{
   container;
 
   editorElements = [];
+  nodes = [];
 
   constructor(container, key){
     this.key = key;
@@ -1178,11 +1179,28 @@ class KeyEditor{
   createNode(key, index, container, previousNodeDiv){
     var node = key.nodes[index];
     var nodeDiv = document.createElement("div");
+    this.nodes.push(nodeDiv);
     nodeDiv.classList.add("node");
     nodeDiv.innerHTML = `<h3 id='node-${node._id}' class="nodeNumber" node="${node._id}">${index+1}</h3>`;
+    var pathsDiv = document.createElement("div");
+    pathsDiv.classList.add("paths");
+    nodeDiv.appendChild(pathsDiv);
     for(var i = 0; i < node.paths.length; i++) {
-      this.createPath(key, index, i, nodeDiv);
+      this.createPath(key, index, i, pathsDiv);
     }
+    var addPathButton = document.createElement("a");
+    addPathButton.classList.add("btn","btn-primary","add-path-button", "margin-top");
+    addPathButton.textContent = "+";
+    addPathButton.addEventListener('click', () => {
+      var path = {
+        description: "",
+        nextNode: null
+      };
+      node.paths.push(path);
+      this.createPath(key, index, node.paths.length-1, pathsDiv, false, true);
+    });
+    nodeDiv.appendChild(addPathButton);
+
     if(previousNodeDiv){
       container.insertBefore(nodeDiv, previousNodeDiv);
     } else {
@@ -1190,15 +1208,41 @@ class KeyEditor{
     }
   }
 
-  createPath(key, nodeIndex, pathIndex, container){
+  createPath(key, nodeIndex, pathIndex, container, codeAllowed = false, isEditable = false){
     var path = key.nodes[nodeIndex].paths[pathIndex];
     var pathDiv = document.createElement("div");
     container.appendChild(pathDiv);
     pathDiv.classList.add("path");
+
+    var numberDiv = document.createElement("div");
+    numberDiv.classList.add("pathNumber");
+    pathDiv.appendChild(numberDiv);
+
     var number = document.createElement("p");
-    number.innerHTML = pathIndex+1;
-    pathDiv.appendChild(number);
-    this.createEditableElement(document.createElement('p'), path.description, function(){path.description = this.value}, pathDiv);
+    number.innerHTML = (pathIndex+1) + "  ";
+    numberDiv.appendChild(number);
+
+    var deletePath = document.createElement("a");
+    deletePath.classList.add("btn","btn-primary","button-cancel", "button-delete-path");
+    deletePath.textContent = "X";
+    deletePath.addEventListener('click', () => {
+      key.nodes[nodeIndex].paths.splice(pathIndex, 1);
+      pathDiv.remove();
+    });
+    number.appendChild(deletePath);
+
+    var pathInfoDiv = document.createElement("div");
+    pathInfoDiv.classList.add("pathInfo");
+    pathDiv.appendChild(pathInfoDiv);
+
+    this.createEditableElement(document.createElement('p'), path.description, function(){path.description = this.value}, pathInfoDiv, codeAllowed, isEditable);
+
+    var pathButtons = document.createElement("div");
+    pathButtons.classList.add("link");
+    pathDiv.appendChild(pathButtons);
+
+    
+
   }
 
   goToNode(id){
@@ -1213,11 +1257,12 @@ class KeyEditor{
   }
 
 
-  createEditableElement(element, value, submitFunction, container = this.container){
+  createEditableElement(element, value, submitFunction, container = this.container, codeAllowed = false, isEditable = false){
     element.textContent = value;
     container.appendChild(element);
-    var editor = TextEditor.associate(element, value, container, submitFunction);
+    var editor = TextEditor.associate(element, value, container, submitFunction, codeAllowed, isEditable);
     this.editorElements.push(editor);
+    return editor;
   }
 
   static createKeyEditor(container, key){
@@ -1228,8 +1273,18 @@ class KeyEditor{
 
   enableEdition(value){
     this.editorElements.forEach(element => {
-      console.log(element);
-      element.enableEdition(value);
+      if(element){
+        element.enableEdition(value);
+      }
+    });
+    this.nodes.forEach(element => {
+      if(element){
+        if(value){
+          element.classList.add("enabled");
+        } else{
+          element.classList.remove("enabled");
+        }
+      }
     });
   }
 
@@ -1250,14 +1305,14 @@ class TextEditor{
 
   isEditable;
 
-  constructor(associatedElement, value, mainContainerElement, submitFunction, codeAllowed){
+  constructor(associatedElement, value, mainContainerElement, submitFunction, codeAllowed, isEditable = false){
     this.associatedElement = associatedElement;
     this.value = value;
     this.mainContainerElement = mainContainerElement;
     this.submitFunction = submitFunction;
     submitFunction = submitFunction.bind(this);
     this.codeAllowed = codeAllowed;
-    this.isEditable = false;
+    this.isEditable = isEditable;
   }
 
   init(){
@@ -1301,6 +1356,7 @@ class TextEditor{
 
     this.associatedElement.addEventListener("click", () => this.showEditor());
     this.associatedElement.classList.add("editable");
+    if(this.isEditable) this.associatedElement.classList.add("enabled");
   }
 
   submit(){
@@ -1333,17 +1389,18 @@ class TextEditor{
       this.editor = CodeMirror.fromTextArea(this.editorElement, {
         lineNumbers: true,
         mode: "javascript"
-      });*/
+      });
+      */
     } else {
       this.editorElement.value = this.value;
     }
   }
 
-  static associate(element, value, mainContainerElement, submitFunction, codeAllowed = false) {
+  static associate(element, value, mainContainerElement, submitFunction, codeAllowed = false, isEditable = false) {
     if(element.associatedEditor != null){
       return null;
     }
-    var textEditor = new TextEditor(element, value, mainContainerElement, submitFunction, codeAllowed);
+    var textEditor = new TextEditor(element, value, mainContainerElement, submitFunction, codeAllowed, isEditable);
     textEditor.init();
     element.associatedEditor = textEditor;
     return textEditor;
