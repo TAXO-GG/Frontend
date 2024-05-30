@@ -28,6 +28,14 @@ function removeOpenUserTab(tab) {
  *                       *
  * * * * * * * * * * * * */
 
+function generateObjectId() {
+  const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
+  const randomPart = 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, function () {
+    return (Math.random() * 16 | 0).toString(16);
+  }).toLowerCase();
+  return timestamp + randomPart;
+}
+
 function checkArg(argName, argValue, type){
   if(!(typeof argValue == type)){
     throwException("WrongTypeArg", `The arg '${argName}' must be a '${type}'. '${argValue}' is not a valid ${type}.`);
@@ -1093,8 +1101,12 @@ class KeyEditor{
   key;
   container;
 
+  nodeContainer;
+
   editorElements = [];
   nodes = [];
+  nodeNumberReferences = [];
+  nodeNumberTitleReferences = [];
 
   constructor(container, key){
     this.key = key;
@@ -1129,7 +1141,7 @@ class KeyEditor{
       this.enableEdition(false);
       saveButton.classList.add("none");
       editButton.classList.remove("none");
-      cancelEditionButton.classList.remove("none");
+      cancelEditionButton.classList.add("none");
     });
 
     editButton.addEventListener('click', () => {
@@ -1167,7 +1179,8 @@ class KeyEditor{
     this.createEditableElement(document.createElement('h4'), key.startTaxon, function(){key.startTaxon = this.value}, keyInfoDiv);
 
 
-    var nodeContainer = document.createElement("div");
+    this.nodeContainer = document.createElement("div");
+    var nodeContainer = this.nodeContainer;
     nodeContainer.classList.add("node-container");
     this.container.appendChild(nodeContainer);
 
@@ -1176,17 +1189,44 @@ class KeyEditor{
     }
   }
 
-  createNode(key, index, container, previousNodeDiv){
+  createNode(key, index, container, previousNodeDiv = null, isEnabled){
     var node = key.nodes[index];
     var nodeDiv = document.createElement("div");
     this.nodes.push(nodeDiv);
     nodeDiv.classList.add("node");
-    nodeDiv.innerHTML = `<h3 id='node-${node._id}' class="nodeNumber" node="${node._id}">${index+1}</h3>`;
+    if(isEnabled) {
+      nodeDiv.classList.add("enabled");
+    }
+
+    var deleteNode = document.createElement("a");
+    deleteNode.classList.add("btn","btn-primary","button-cancel", "button-delete-node");
+    deleteNode.textContent = "X";
+    deleteNode.addEventListener('click', () => {
+      key.nodes.splice(index, 1);
+      nodeDiv.remove();
+      this.nodeNumberTitleReferences.remove(nodeDiv);
+      this.updateNodeNumberReferences();
+      this.reasignNodeNumberTitleReferences();
+    });
+    nodeDiv.appendChild(deleteNode);
+
+    var nodeNumber = document.createElement("h3");
+    this.nodeNumberTitleReferences.push(nodeDiv);
+    nodeNumber.textContent = index + 1;
+    nodeNumber.id = 'node-${node._id}';
+    nodeNumber.classList.add("nodeNumber");
+    nodeNumber.setAttribute("node", node._id);
+    nodeDiv.appendChild(nodeNumber);
+
+    
+
     var pathsDiv = document.createElement("div");
     pathsDiv.classList.add("paths");
     nodeDiv.appendChild(pathsDiv);
-    for(var i = 0; i < node.paths.length; i++) {
-      this.createPath(key, index, i, pathsDiv);
+    if(node.paths){
+      for(var i = 0; i < node.paths.length; i++) {
+        this.createPath(key, index, i, pathsDiv);
+      }
     }
     var addPathButton = document.createElement("a");
     addPathButton.classList.add("btn","btn-primary","add-path-button", "margin-top");
@@ -1196,6 +1236,9 @@ class KeyEditor{
         description: "",
         nextNode: null
       };
+      if(!node.paths){
+        node.paths = [];
+      }
       node.paths.push(path);
       this.createPath(key, index, node.paths.length-1, pathsDiv, false, true);
     });
@@ -1235,20 +1278,216 @@ class KeyEditor{
     pathInfoDiv.classList.add("pathInfo");
     pathDiv.appendChild(pathInfoDiv);
 
-    this.createEditableElement(document.createElement('p'), path.description, function(){path.description = this.value}, pathInfoDiv, codeAllowed, isEditable);
+    var descriptionDiv = document.createElement("div");
+    descriptionDiv.classList.add("pathDescription");
+    pathInfoDiv.appendChild(descriptionDiv);
+    this.createEditableElement(document.createElement('p'), path.description, function(){path.description = this.value}, descriptionDiv, codeAllowed, isEditable);
+    if(path.taxon){
+      var taxonReference = document.createElement('p');
+      taxonReference.classList.add("taxon-reference");
+      var taxonLink = document.createElement('a');
+      taxonLink.classList.add("taxon-link");
+      taxonLink.textContent = path.taxon;
+      taxonLink.addEventListener('click', () => {
+        Router.getInstance().setParams({window:"taxons",taxon:path.taxon});
+      });
+      taxonReference.appendChild(taxonLink);
+      descriptionDiv.appendChild(taxonReference);
+    }
 
     var pathButtons = document.createElement("div");
     pathButtons.classList.add("link");
     pathDiv.appendChild(pathButtons);
 
-    
+    this.createLinkDivContent(key, nodeIndex, pathIndex, pathButtons);
+    /*
+    if(path.node){
+      var goToNodeButton = document.createElement("a");
+      goToNodeButton.classList.add("btn","btn-primary");
+      this.setNodeNumber(key, path.node, goToNodeButton);
+      this.nodeNumberReferences.push({key:key, node:path.node, button:goToNodeButton});
+      goToNodeButton.addEventListener('click', () => {
+        this.goToNode(path.node);
+      });
+      pathButtons.appendChild(goToNodeButton);
+    }
+
+    if(!path.taxon || (path.taxon && (!path.node || !path.key))){
+      var linkButton = document.createElement("a");
+      linkButton.classList.add("btn","btn-primary", "link-btn");
+      linkButton.textContent = "🔗";
+      linkButton.addEventListener('click', () => {
+        this.linkPath(key, nodeIndex, pathIndex, pathButtons);
+      });
+      pathButtons.appendChild(linkButton);
+    }
+    */
 
   }
 
+  createLinkDivContent(key, nodeIndex, pathIndex, pathButtons) {
+    pathButtons.innerHTML = "";
+    var node = key.nodes[nodeIndex];
+    var path = node.paths[pathIndex];
+
+    if (path.node && path.node !== null) {
+      console.log("Path node", path.node);
+      var goToNodeButton = document.createElement("a");
+      goToNodeButton.classList.add("btn", "btn-primary");
+      this.setNodeNumber(key, path.node, goToNodeButton);
+      this.nodeNumberReferences.push({ key: key, node: path.node, button: goToNodeButton });
+      goToNodeButton.addEventListener('click', () => {
+        this.goToNode(path.node);
+      });
+      pathButtons.appendChild(goToNodeButton);
+    }
+
+    var linkButton = document.createElement("a");
+    linkButton.classList.add("btn","btn-primary", "link-btn");
+    linkButton.textContent = "🔗";
+    linkButton.addEventListener('click', () => {
+      this.linkPath(key, nodeIndex, pathIndex, pathButtons);
+    });
+    pathButtons.appendChild(linkButton);
+
+  }
+
+  setNodeNumber(key, node, button){
+    var nodeIndex = key.nodes.findIndex(n => n._id == node);
+    if(nodeIndex != -1){
+      button.textContent = nodeIndex + 1;
+    }
+  }
+
+  updateNodeNumberReferences(){
+    this.nodeNumberReferences.forEach(reference => {
+      if(reference!=null){
+        this.setNodeNumber(reference.key, reference.node, reference.button);
+      }
+    });
+  }
+
+  reasignNodeNumberTitleReferences() {
+    this.nodeNumberTitleReferences.forEach(nodeTitle => {
+      this.key.forEach(node => {
+        if(nodeTitle.getAttribute("node") == node._id){
+          nodeTitle.textContent = node._id + 1;
+        }
+      });
+    });
+  }
+
+  linkPath(key, nodeIndex, pathIndex, containerDiv){
+    var divContainer = document.createElement("div");
+
+    var linkToNodeLabel = document.createElement("p");
+    linkToNodeLabel.textContent = "Link to node:";
+    divContainer.appendChild(linkToNodeLabel);
+
+    var comboBox = document.createElement("select");
+    comboBox.classList.add("node-combo", "btn");
+    console.log(key.nodes);
+
+    var option = document.createElement("option");
+    option.value = '';
+    option.textContent = '-';
+    comboBox.appendChild(option);
+
+    for(var i = 0; i < key.nodes.length; i++){
+      var itNode = key.nodes[i]._id;
+      var skip = key.nodes[nodeIndex]._id == itNode;
+      console.log(skip);
+      if(skip){
+        continue;
+      }
+      
+      for(var j = 0; j < key.nodes[nodeIndex].paths.length; j++){
+        var itPathNode = key.nodes[nodeIndex].paths[j].node;
+        console.log(itPathNode, i, itNode, j);
+        if(pathIndex != j && itPathNode == itNode){
+          skip = true;
+          console.log(skip);
+          break;
+        }
+      }
+      
+      if(skip) {
+        continue;
+      }
+
+      var option = document.createElement("option");
+      option.value = key.nodes[i]._id;
+      option.textContent = i + 1;
+      comboBox.appendChild(option);
+    }
+
+    
+
+    divContainer.appendChild(comboBox);
+
+    var linkButton = document.createElement("a");
+    linkButton.classList.add("btn","btn-primary", "margin-left");
+    linkButton.textContent = "Link";
+    linkButton.addEventListener('click', () => {
+      var selectedNode = comboBox.value;
+      console.log("Selected", selectedNode);
+      if(selectedNode == null || selectedNode == '') {
+        delete key.nodes[nodeIndex].paths[pathIndex].node;
+        console.log("path",key.nodes[nodeIndex].paths[pathIndex]);
+      } else {
+        key.nodes[nodeIndex].paths[pathIndex].node = selectedNode;
+      }
+      this.createLinkDivContent(key, nodeIndex, pathIndex, containerDiv);
+      session.modal.closeModal();
+    });
+    divContainer.appendChild(linkButton);
+
+    divContainer.appendChild(document.createElement("hr"));
+
+    var linkToTaxonLabel = document.createElement("p");
+    linkToTaxonLabel.textContent = "Link to taxon:";
+    divContainer.appendChild(linkToTaxonLabel);
+
+
+
+    divContainer.appendChild(document.createElement("hr"));
+
+    var newNodeButton = document.createElement("a");
+    newNodeButton.classList.add("btn", "btn-primary");
+    newNodeButton.textContent = "New node";
+    newNodeButton.addEventListener('click', () => {
+      var newNodeId = generateObjectId(); // Generar nuevo ObjectId
+      var newNode = { _id: newNodeId, paths: [] };
+      key.nodes.push(newNode);
+      key.nodes[nodeIndex].paths[pathIndex].node = newNodeId;
+
+      this.createNode(key, key.nodes.length - 1, this.nodeContainer, null, true);
+
+      this.createLinkDivContent(key, nodeIndex, pathIndex, containerDiv);
+
+      session.modal.closeModal();
+    });
+    divContainer.appendChild(newNodeButton);
+
+    session.modal.loadElement(divContainer);
+  }
+
+  
+  
+
+
   goToNode(id){
     var node = document.getElementById(`node-${id}`);
+    console.log(id, node);
     if(node){
+
+      var highlighted = document.querySelector(".highlight");
+      if(highlighted){
+        highlighted.classList.remove("highlight");
+      }
+
       node.scrollIntoView();
+      node.classList.add("highlight");
     }
   }
 

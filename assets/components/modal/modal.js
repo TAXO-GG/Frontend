@@ -33,6 +33,12 @@ class Modal{
         this.showModal();
     }
 
+    loadElement(element){
+        this.container.innerHTML = "";
+        this.container.appendChild(element);
+        this.showModal();
+    }
+
     swapContent(element){
         this.parentBuffer = element;
         this.container.innerHTML = element.innerHTML;

@@ -403,11 +403,23 @@ input[type="text"], input[type="password"]{
 
 .node-container > *:not(:first-child) {
     box-shadow: 0px -1px 0px 0px var(--border-light);
-    padding-top: 1rem;
+    padding-top: 2rem;
 }
 
 .node{
     padding-bottom: 1.5rem;
+    padding-top: 1rem;
+}
+
+.nodeNumber {
+    margin: 0;
+    margin-top: 1rem;
+    padding: 1rem;
+    display: inline;
+}
+
+.nodeNumber.highlight{
+    background-color: var(--bg-secondary);
 }
 
 .node .path{
@@ -416,11 +428,15 @@ input[type="text"], input[type="password"]{
     grid-auto-flow: column;
     gap: .5rem;
     column-count: 3;
-    grid-template-columns: 25px 1fr 25px;
+    grid-template-columns: 25px 1fr;
 }
 
 .node.enabled .path{
-    grid-template-columns: 50px 1fr 25px;
+    grid-template-columns: 50px 1fr;
+}
+
+.paths{
+    margin-left: 1rem;
 }
 
 .pathNumber{
@@ -431,11 +447,27 @@ input[type="text"], input[type="password"]{
     margin-left: 1rem !important;
 }
 
+.node .button-delete-node{
+    display: none;
+}
+
+.node.enabled .button-delete-node{
+    display: inline;
+}
+
 .node .add-path-button {
     display: none;
 }
 
 .node.enabled .add-path-button {
+    display: block;
+}
+
+.node .link-btn {
+    display: none;
+}
+
+.node.enabled .link-btn {
     display: block;
 }
 
@@ -446,6 +478,20 @@ input[type="text"], input[type="password"]{
 
 .node.enabled .button-delete-path{
     display: inline;
+}
+
+.node .link{
+    display: flex;
+    align-items: center;
+    row-gap: .5rem;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.node .taxon-link{
+    cursor: pointer;
+    color: var(--color-secondary);
+    margin-left: 1rem;
 }
 
 path > p {
