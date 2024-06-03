@@ -9,14 +9,6 @@ class Router {
     constructor() {
     }
 
-    /**
-     * Inicializa la URL y los parámetros al cargar o recargar la página
-     */
-    initParams() { 
-        this.url = new URL(window.location.href);
-        this.params = this.url.searchParams;
-    }
-
     static getInstance(){
         if(Router.instance == null){
             Router.instance = new Router();
@@ -25,6 +17,14 @@ class Router {
         }
         return Router.instance;
     }
+
+    /**
+     * Inicializa la URL y los parámetros al cargar o recargar la página
+     */
+    initParams() { 
+        this.url = new URL(window.location.href);
+        this.params = this.url.searchParams;
+    }  
 
     /**
      * Inicializa la ruta de la página basada en los parámetros URL
@@ -67,7 +67,7 @@ class Router {
         var view = params['window'];
         switch (view) {
             case "taxons":
-                await TabManager.getInstance().createTab('taxons', 3, {window: 'taxons'}, createTaxonsTabContent);
+                await TabManager.getInstance().createTab('taxons', 3, params, createTaxonsTabContent, updateTaxonSearch);
                 break;
             case "keys":
                 var tab = await TabManager.getInstance().createTab('keys', 4, {window: 'keys'}, createKeysTabContent, updateUserKeys);

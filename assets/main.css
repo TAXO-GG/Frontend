@@ -412,6 +412,7 @@ input[type="text"], input[type="password"]{
 }
 
 .nodeNumber {
+    border-radius: 1rem;
     margin: 0;
     margin-top: 1rem;
     padding: 1rem;
@@ -449,6 +450,7 @@ input[type="text"], input[type="password"]{
 
 .node .button-delete-node{
     display: none;
+    margin-right: 1rem;
 }
 
 .node.enabled .button-delete-node{

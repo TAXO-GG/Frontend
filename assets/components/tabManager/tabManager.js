@@ -100,7 +100,7 @@ class Tab{
         thisRelatedButton.classList.add("active");
         
         if(this.updateContentFunction && this.updateContentFunction instanceof Function){
-            await this.updateContentFunction();
+            await this.updateContentFunction(this.url);
         }
     }
 
@@ -192,6 +192,9 @@ class TabManager{
     async createTab(id, title, url, createContentFunction, updateContentFunction, params){
         var tab = this.getTab(id);
         if(tab != null){
+            if(url!=null){
+                tab.url = url;
+            }
             await this.setActiveTab(tab);
             return null;
         }

@@ -878,7 +878,18 @@ async function createTaxonsTabContent(tabContentContainerReference){
   
 }
 
+async function updateTaxonSearch(params){
+    container = document.getElementById("taxon-result-div");
+    var taxon = params.taxon;
+    await searchTaxon(container, taxon);
+}
+
 async function searchTaxon(container, taxon, previousTaxon = null) {
+
+  if(container == null || taxon == null){
+    return;
+  }
+
   var searchValue = taxon;
   if (searchValue.isBlank()) {
       return;
@@ -902,7 +913,7 @@ async function searchTaxon(container, taxon, previousTaxon = null) {
       return;
   }
   Cache.getInstance().addTaxon(taxon.name, taxon);
-
+  Router.getInstance().setParams({window: 'taxons', taxon: taxon.name}, false);
   if(taxon.hierarchy != null) {
 
     var hierarchyLabel = document.createElement("h3");
@@ -1213,7 +1224,7 @@ class KeyEditor{
     var nodeNumber = document.createElement("h3");
     this.nodeNumberTitleReferences.push(nodeDiv);
     nodeNumber.textContent = index + 1;
-    nodeNumber.id = 'node-${node._id}';
+    nodeNumber.id = `node-${node._id}`;
     nodeNumber.classList.add("nodeNumber");
     nodeNumber.setAttribute("node", node._id);
     nodeDiv.appendChild(nodeNumber);
@@ -1289,7 +1300,7 @@ class KeyEditor{
       taxonLink.classList.add("taxon-link");
       taxonLink.textContent = path.taxon;
       taxonLink.addEventListener('click', () => {
-        Router.getInstance().setParams({window:"taxons",taxon:path.taxon});
+        Router.getInstance().setParams({window:"taxons", taxon: path.taxon});
       });
       taxonReference.appendChild(taxonLink);
       descriptionDiv.appendChild(taxonReference);
