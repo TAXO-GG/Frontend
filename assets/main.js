@@ -28,6 +28,20 @@ function removeOpenUserTab(tab) {
  *                       *
  * * * * * * * * * * * * */
 
+function cloneObject(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+
+  let newObj = Array.isArray(obj) ? [] : {};
+
+  for (let key in obj) {
+    newObj[key] = cloneObject(obj[key]);
+  }
+
+  return newObj;
+}
+
 function generateObjectId() {
   const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
   const randomPart = 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, function () {
@@ -1109,9 +1123,13 @@ async function createKeyTabContent(tabContentContainerReference, key){
 
 class KeyEditor{
 
+  originalKey;
   key;
+  
   container;
 
+  keyChangesBuffer;
+  keyContainer;
   nodeContainer;
 
   editorElements = [];
@@ -1120,13 +1138,28 @@ class KeyEditor{
   nodeNumberTitleReferences = [];
 
   constructor(container, key){
-    this.key = key;
+    this.updateKeyReferences(key);
     this.container = container;
   }
 
-  init(){
-    var key = this.key;
+  updateKeyReferences(key){
+    this.originalKey = key;
+    this.key = cloneObject(key);
+  }
 
+  init(){
+
+    this.loadKeyButtons();
+
+    this.keyContainer = document.createElement("div");
+    this.keyContainer.classList.add("key-container");
+    this.container.appendChild(this.keyContainer);
+
+    this.loadKey(this.key);
+
+  }
+
+  loadKeyButtons(){
     var saveButtonContainer = document.createElement("div");
     saveButtonContainer.classList.add("save-button-container");
     this.container.appendChild(saveButtonContainer);
@@ -1139,7 +1172,7 @@ class KeyEditor{
     var cancelEditionButton = document.createElement("a");
     cancelEditionButton.classList.add("btn","btn-primary","lng", "button-cancel", "none");
     cancelEditionButton.setAttribute("lng","49");
-    cancelEditionButton.textContent = "X";
+    cancelEditionButton.textContent = "Discard changes";
 
     var saveButton = document.createElement('a');
     saveButton.classList.add("btn","btn-primary","lng", "btn-submit", "none");
@@ -1148,7 +1181,10 @@ class KeyEditor{
 
 
     saveButton.addEventListener('click', () => {
-      if(!this.save()) return;
+      if(!this.save()){
+        return;
+      }
+      this.updateKeyReferences(this.Key);
       this.enableEdition(false);
       saveButton.classList.add("none");
       editButton.classList.remove("none");
@@ -1162,23 +1198,29 @@ class KeyEditor{
       cancelEditionButton.classList.remove("none");
     });
 
-    cancelEditionButton.addEventListener('click', () => {
-      this.enableEdition(false);
-      editButton.classList.remove("none");
-      saveButton.classList.add("none");
-      cancelEditionButton.classList.add("none");
+    cancelEditionButton.addEventListener('click',async () => {
+      var cancelAction = await session.modal.askForConfirmation("Are you sure you want to discard the changes?");
+      if(cancelAction === true) {
+        this.updateKeyReferences(this.originalKey);
+        this.loadKey(this.key);
+        editButton.classList.remove("none");
+        saveButton.classList.add("none");
+        cancelEditionButton.classList.add("none");
+      }
     });
     
-
-
     saveButtonContainer.appendChild(editButton);
     saveButtonContainer.appendChild(cancelEditionButton);
     saveButtonContainer.appendChild(saveButton);
-    
+  }
+
+  loadKey(key){
+
+    this.keyContainer.innerHTML = "";
 
     var keyInfoDiv = document.createElement("div");
     keyInfoDiv.classList.add("key-info");
-    this.container.appendChild(keyInfoDiv);
+    this.keyContainer.appendChild(keyInfoDiv);
 
     keyInfoDiv.insertAdjacentHTML('beforeend', "<h5><span class='lng' lng='40'>Title</span>:</h5>");
     this.createEditableElement(document.createElement('h4'), key.title, function(){key.title = this.value}, keyInfoDiv);
@@ -1193,7 +1235,7 @@ class KeyEditor{
     this.nodeContainer = document.createElement("div");
     var nodeContainer = this.nodeContainer;
     nodeContainer.classList.add("node-container");
-    this.container.appendChild(nodeContainer);
+    this.keyContainer.appendChild(nodeContainer);
 
     for (var i = 0; i < key.nodes.length; i++) {
       this.createNode(key, i, nodeContainer);
@@ -1311,29 +1353,6 @@ class KeyEditor{
     pathDiv.appendChild(pathButtons);
 
     this.createLinkDivContent(key, nodeIndex, pathIndex, pathButtons);
-    /*
-    if(path.node){
-      var goToNodeButton = document.createElement("a");
-      goToNodeButton.classList.add("btn","btn-primary");
-      this.setNodeNumber(key, path.node, goToNodeButton);
-      this.nodeNumberReferences.push({key:key, node:path.node, button:goToNodeButton});
-      goToNodeButton.addEventListener('click', () => {
-        this.goToNode(path.node);
-      });
-      pathButtons.appendChild(goToNodeButton);
-    }
-
-    if(!path.taxon || (path.taxon && (!path.node || !path.key))){
-      var linkButton = document.createElement("a");
-      linkButton.classList.add("btn","btn-primary", "link-btn");
-      linkButton.textContent = "🔗";
-      linkButton.addEventListener('click', () => {
-        this.linkPath(key, nodeIndex, pathIndex, pathButtons);
-      });
-      pathButtons.appendChild(linkButton);
-    }
-    */
-
   }
 
   createLinkDivContent(key, nodeIndex, pathIndex, pathButtons) {
@@ -1455,14 +1474,6 @@ class KeyEditor{
 
     divContainer.appendChild(document.createElement("hr"));
 
-    var linkToTaxonLabel = document.createElement("p");
-    linkToTaxonLabel.textContent = "Link to taxon:";
-    divContainer.appendChild(linkToTaxonLabel);
-
-
-
-    divContainer.appendChild(document.createElement("hr"));
-
     var newNodeButton = document.createElement("a");
     newNodeButton.classList.add("btn", "btn-primary");
     newNodeButton.textContent = "New node";
@@ -1479,6 +1490,12 @@ class KeyEditor{
       session.modal.closeModal();
     });
     divContainer.appendChild(newNodeButton);
+
+    divContainer.appendChild(document.createElement("hr"));
+
+    var linkToTaxonLabel = document.createElement("p");
+    linkToTaxonLabel.textContent = "Reference to taxon:";
+    divContainer.appendChild(linkToTaxonLabel);
 
     session.modal.loadElement(divContainer);
   }

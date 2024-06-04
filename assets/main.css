@@ -438,6 +438,7 @@ input[type="text"], input[type="password"]{
 
 .paths{
     margin-left: 1rem;
+    margin-top: 1rem;
 }
 
 .pathNumber{
@@ -512,6 +513,11 @@ p.editable {
     margin-bottom: 1rem;
     padding-top: 4.8px;
     padding-bottom: 4.8px;
+}
+
+.space-around{
+    display: flex;
+    justify-content: space-around;
 }
 
 @media (max-width: 1200px) {
