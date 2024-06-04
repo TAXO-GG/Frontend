@@ -536,6 +536,17 @@ p.editable {
     margin-top: 1rem;
 }
 
+.delete-key-p{
+    text-align: end;
+    display: none;
+    height: 0;
+    margin: 0;
+}
+
+.delete-key-p.enabled{
+    display: block;
+}
+
 @media (max-width: 1200px) {
 
     .twoColumns {

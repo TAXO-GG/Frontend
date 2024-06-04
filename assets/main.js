@@ -730,6 +730,7 @@ async function updateKey(taxonomicKey){
     console.error('Error:', error);
     return false;
   }
+  return false;
 }
 
 async function newKey(keyTitle, startingTaxon, description){
@@ -756,6 +757,25 @@ async function newKey(keyTitle, startingTaxon, description){
     console.error('Error:', error);
     return false;
   }
+  return false;
+}
+
+async function deleteKey(id){
+  const endpoint = `/key/flush/${id}`;
+  try {
+    const response = await getFromApi(endpoint, true);
+    if(response==null){
+      return false;
+    }
+    if(response.statusCode === 200){
+      console.log("Key deleted successfully");
+      return true;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    return false;
+  }
+  return false;
 }
 
 /* * * * * * * * * * *
@@ -1217,6 +1237,8 @@ class KeyEditor{
   nodeNumberReferences = [];
   nodeNumberTitleReferences = [];
 
+  deleteKeyButton;
+
   constructor(container, key){
     this.updateKeyReferences(key);
     this.container = container;
@@ -1302,6 +1324,27 @@ class KeyEditor{
     var keyInfoDiv = document.createElement("div");
     keyInfoDiv.classList.add("key-info");
     this.keyContainer.appendChild(keyInfoDiv);
+
+    this.deleteKeyButton = document.createElement("p");
+    this.deleteKeyButton.classList.add("delete-key-p");
+    var deleteKeyButton = document.createElement("a");
+    deleteKeyButton.classList.add("btn","lng", "btn-primary","button-cancel", "button-delete-key");
+    deleteKeyButton.textContent = "Delete Key";
+    deleteKeyButton.setAttribute("lng", "57");
+    deleteKeyButton.addEventListener('click', async () => {
+      var text = getText(58);
+      var deleteAction = await session.modal.askForConfirmation(isNullOrEmpty(text) ? "Are you sure you want to delete this key?" : text);
+      if(deleteAction === true) {
+        if(await deleteKey(key._id)){
+          TabManager.getInstance().closeActiveTab();
+          Router.getInstance().goTo('keys');
+        } else {
+          session.modal.loadAlert("Key could not be deleted.");
+        }
+      }
+    });
+    this.deleteKeyButton.appendChild(deleteKeyButton);
+    keyInfoDiv.appendChild(this.deleteKeyButton);
 
     keyInfoDiv.insertAdjacentHTML('beforeend', "<h5><span class='lng' lng='40'>Title</span>:</h5>");
     this.createEditableElement(document.createElement('h4'), key.title, function(){key.title = this.value}, keyInfoDiv);
@@ -1683,6 +1726,12 @@ class KeyEditor{
         }
       }
     });
+    if(value && this.key.author == session.profile.username){
+      this.deleteKeyButton.classList.add("enabled");
+    } else {
+      this.deleteKeyButton.classList.remove("enabled");
+    }
+
   }
 
 }

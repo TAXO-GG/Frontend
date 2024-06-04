@@ -210,6 +210,12 @@ class TabManager{
         return this.tabReferences[keys[keys.length - 1]];
     }
 
+    closeActiveTab() {
+        if(this.activeTab != null){
+            this.activeTab.close();
+        }
+    }
+
 }
 
 class Slider {
