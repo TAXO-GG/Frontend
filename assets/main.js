@@ -79,9 +79,9 @@ String.prototype.capitalize = function(){
 }
 
 isNullOrEmpty = function(str){
-  if (this == null || this == undefined) return true;
-  if (this.length == 0) return true;
-  return /^[ \t\n\r\x0B\x0C]*$/.test(this);
+  if (str == null || str == undefined) return true;
+  if (str.length == 0) return true;
+  return /^[ \t\n\r\x0B\x0C]*$/.test(str);
 }
 
 /* * * * * * * * * * * * * * * * * *
@@ -1302,6 +1302,7 @@ class KeyEditor{
 
     cancelEditionButton.addEventListener('click',async () => {
       var text = getText(50);
+      console.log(text);
       var cancelAction = await session.modal.askForConfirmation(isNullOrEmpty(text) ? "Are you sure you want to discard the changes?" : text);
       if(cancelAction === true) {
         this.updateKeyReferences(this.originalKey);
@@ -1339,7 +1340,8 @@ class KeyEditor{
           TabManager.getInstance().closeActiveTab();
           Router.getInstance().goTo('keys');
         } else {
-          session.modal.loadAlert("Key could not be deleted.");
+          text = getText(59);
+          session.modal.loadAlert(isNullOrEmpty(text) ? "The key could not be deleted" : text);
         }
       }
     });

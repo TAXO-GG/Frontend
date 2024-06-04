@@ -59,4 +59,4 @@ nom;Español;English;Euskara;Català
 56;Crear un nuevo nodo y enlazarlo;Create a new node and link it;Nodo berri bat sortu eta estekatu;Crear un nou node i enllaçar-lo
 57;Eliminar clave;Delete key;Giltza ezabatu;Eliminar clau
 58;Vas a borrar la clave, ¿Estás seguro?;You are going to delete the key, are you sure?;Giltza ezabatuko duzu, ziur zaude?;Vas a esborrar la clau, estàs segur?
-
+59;No se ha podido borrar la clave;The key could not be deleted;Ezin izan da giltza ezabatu;No s'ha pogut esborrar la clau
