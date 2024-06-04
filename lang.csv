@@ -47,3 +47,16 @@ nom;Español;English;Euskara;Català
 44;Descripción;Description;Deskribapena;Descripció
 45;Taxón inicial;Starting taxon;Hasierako taxona;Taxó inicial
 46;Colaboradores;Collaborators;Laguntzaileak;Col·laboradors
+47;Guardar cambios;Save changes;Aldaketak gorde;Desar canvis
+48;Editar;Edit;Editatu;Editar
+49;Descartar cambios;Discard changes;Aldaketak baztertu;Descartar canvis
+50;¿Seguro que quieres descartar los cambios?;Are you sure you want to discard the changes?;Aldaketak baztertu nahi dituzula ziur zaude?;Segur que vols descartar els canvis?
+51;No puedes borrar el último nodo;You can't delete the last node;Azken nodoa ezabatu ezin duzu;No pots esborrar l'últim node
+52;Enlazar a nodo;Link to node;Nodoarekin estekatu;Enllaçar a node
+53;Enlazar;Link;Estekatu;Enllaçar
+54;Nuevo nodo;New node;Nodo berria;Nou node
+55;Referencia al taxón;Reference to the taxon;Taxoiari erreferentzia;Referència al taxó
+56;Crear un nuevo nodo y enlazarlo;Create a new node and link it;Nodo berri bat sortu eta estekatu;Crear un nou node i enllaçar-lo
+
+
+

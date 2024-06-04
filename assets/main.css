@@ -300,6 +300,7 @@ input[type="text"], input[type="password"]{
     box-shadow: 0px 0px 8px -1px var(--border-light);
     padding: 1rem;
     border-radius: 1rem;
+    margin-bottom: 1.5rem;
     cursor: pointer;
     background-color: var(--bg-primary);
 }
@@ -316,6 +317,12 @@ input[type="text"], input[type="password"]{
 .key-element:hover {
     box-shadow: 0px 0px 8px -1px var(--border-dark);
     background-color: var(--bg-secondary);
+}
+
+.key-creation-form{
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
 }
 
 .twoColumns {
@@ -468,6 +475,7 @@ input[type="text"], input[type="password"]{
 
 .node .link-btn {
     display: none;
+    margin-left: 1rem;
 }
 
 .node.enabled .link-btn {
@@ -486,9 +494,9 @@ input[type="text"], input[type="password"]{
 .node .link{
     display: flex;
     align-items: center;
-    row-gap: .5rem;
-    flex-direction: column;
-    justify-content: center;
+    column-gap: 1rem;
+    flex-direction: row;
+    justify-content: flex-end;
 }
 
 .node .taxon-link{
@@ -518,6 +526,14 @@ p.editable {
 .space-around{
     display: flex;
     justify-content: space-around;
+}
+
+.margin-top{
+    margin-top: 1rem;
+}
+
+.btn.margin-top{
+    margin-top: 1rem;
 }
 
 @media (max-width: 1200px) {

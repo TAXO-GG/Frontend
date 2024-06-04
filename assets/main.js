@@ -732,6 +732,32 @@ async function updateKey(taxonomicKey){
   }
 }
 
+async function newKey(keyTitle, startingTaxon, description){
+  if(keyTitle == null || startingTaxon == null|| description == null || keyTitle.isBlank() || startingTaxon.isBlank() || description.isBlank()){
+    session.modal.loadAlert("Invalid information provided.");
+    return;
+  }
+  const endpoint = "/key/new";
+  var data = {
+    title: keyTitle,
+    startTaxon: startingTaxon,
+    description: description
+  };
+  try {
+    const response = await postToApi(endpoint, data, true);
+    if(response==null){
+      return false;
+    }
+    if(response.statusCode === 200){
+      console.log("Key created successfully");
+      return true;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    return false;
+  }
+}
+
 /* * * * * * * * * * *
  *                   *
  *   Main function   *
@@ -1014,6 +1040,9 @@ async function createKeysTabContent(tabContentContainerReference){
   createNewKeyButton.setAttribute("lng","38");
   createNewKeyButton.textContent = "New taxonomic key";
   createNewKeyButton.id = "create-new-key-button";
+  createNewKeyButton.addEventListener("click", async function(){
+    loadKeyCreationForm();
+  });
   tabContentContainerReference.appendChild(createNewKeyButton);
 
   var keysDiv = document.createElement("div");
@@ -1022,6 +1051,57 @@ async function createKeysTabContent(tabContentContainerReference){
   tabContentContainerReference.appendChild(keysDiv);
 
   updateUserKeys();
+}
+
+function loadKeyCreationForm(){
+
+  var container = document.createElement("div");
+  container.classList.add("key-creation-form");
+
+  var titleInput = document.createElement("input");
+  titleInput.type = "text";
+  titleInput.placeholder = getText(40);
+  titleInput.id = "key-title-input";
+  container.appendChild(titleInput);
+
+  var startingTaxonInput = document.createElement("input");
+  startingTaxonInput.type = "text";
+  startingTaxonInput.placeholder = getText(45);
+  startingTaxonInput.id = "key-starting-taxon-input";
+  container.appendChild(startingTaxonInput);
+
+  var descriptionInput = document.createElement("input");
+  descriptionInput.type = "text";
+  descriptionInput.placeholder = getText(44);
+  descriptionInput.id = "key-description-input";
+  container.appendChild(descriptionInput);
+
+  var createKeyButton = document.createElement("a");
+  createKeyButton.classList.add("btn","btn-primary", "lng");
+  createKeyButton.setAttribute("lng","38");
+  createKeyButton.textContent = "Create key";
+  createKeyButton.id = "create-key-button";
+  createKeyButton.addEventListener("click", function(){
+    createKey(titleInput.value, startingTaxonInput.value, descriptionInput.value);
+  });
+  container.appendChild(createKeyButton);
+
+  session.modal.loadElement(container);
+
+}
+
+async function createKey(title, startingTaxon, description){
+  if(title == null || startingTaxon == null|| description == null || title.isBlank() || startingTaxon.isBlank() || description.isBlank()){
+    session.modal.loadAlert("Invalid information provided.");
+    return;
+  }
+  var created = await newKey(title, startingTaxon, description);
+  if(created){
+    updateUserKeys();
+  } else {
+    session.modal.loadAlert("Key could not be created.");
+  }
+  session.modal.closeModal();
 }
 
 async function updateUserKeys(){
@@ -1075,6 +1155,7 @@ async function updateUserKeys(){
     });
   }
 
+  setLangTo(keysDiv);
   setNormalCursor();
 }
 
@@ -1111,7 +1192,6 @@ function createKeyListElement(keyItem){
 
   return keyElement;
 }
-
 
 async function createKeyTabContent(tabContentContainerReference, key){
   if(key == null || tabContentContainerReference == null){
@@ -1199,7 +1279,8 @@ class KeyEditor{
     });
 
     cancelEditionButton.addEventListener('click',async () => {
-      var cancelAction = await session.modal.askForConfirmation("Are you sure you want to discard the changes?");
+      var text = getText(50);
+      var cancelAction = await session.modal.askForConfirmation(isNullOrEmpty(text) ? "Are you sure you want to discard the changes?" : text);
       if(cancelAction === true) {
         this.updateKeyReferences(this.originalKey);
         this.loadKey(this.key);
@@ -1237,9 +1318,18 @@ class KeyEditor{
     nodeContainer.classList.add("node-container");
     this.keyContainer.appendChild(nodeContainer);
 
+    if (key.nodes == null){
+      key.nodes = [];
+      var newNodeId = generateObjectId();
+      key.startNode = newNodeId;
+      var newNode = { _id: newNodeId, paths: [] };
+      key.nodes.push(newNode);
+    }
+
     for (var i = 0; i < key.nodes.length; i++) {
       this.createNode(key, i, nodeContainer);
     }
+    
   }
 
   createNode(key, index, container, previousNodeDiv = null, isEnabled){
@@ -1255,6 +1345,11 @@ class KeyEditor{
     deleteNode.classList.add("btn","btn-primary","button-cancel", "button-delete-node");
     deleteNode.textContent = "X";
     deleteNode.addEventListener('click', () => {
+      if(key.nodes.length >= 1) {
+        var text = getText(51);
+        session.modal.loadAlert( isNullOrEmpty(text) ? "You can't delete the last node." : text);
+        return;
+      }
       key.nodes.splice(index, 1);
       nodeDiv.remove();
       this.nodeNumberTitleReferences.remove(nodeDiv);
@@ -1270,8 +1365,6 @@ class KeyEditor{
     nodeNumber.classList.add("nodeNumber");
     nodeNumber.setAttribute("node", node._id);
     nodeDiv.appendChild(nodeNumber);
-
-    
 
     var pathsDiv = document.createElement("div");
     pathsDiv.classList.add("paths");
@@ -1335,22 +1428,10 @@ class KeyEditor{
     descriptionDiv.classList.add("pathDescription");
     pathInfoDiv.appendChild(descriptionDiv);
     this.createEditableElement(document.createElement('p'), path.description, function(){path.description = this.value}, descriptionDiv, codeAllowed, isEditable);
-    if(path.taxon){
-      var taxonReference = document.createElement('p');
-      taxonReference.classList.add("taxon-reference");
-      var taxonLink = document.createElement('a');
-      taxonLink.classList.add("taxon-link");
-      taxonLink.textContent = path.taxon;
-      taxonLink.addEventListener('click', () => {
-        Router.getInstance().setParams({window:"taxons", taxon: path.taxon});
-      });
-      taxonReference.appendChild(taxonLink);
-      descriptionDiv.appendChild(taxonReference);
-    }
 
     var pathButtons = document.createElement("div");
     pathButtons.classList.add("link");
-    pathDiv.appendChild(pathButtons);
+    descriptionDiv.appendChild(pathButtons);
 
     this.createLinkDivContent(key, nodeIndex, pathIndex, pathButtons);
   }
@@ -1370,6 +1451,19 @@ class KeyEditor{
         this.goToNode(path.node);
       });
       pathButtons.appendChild(goToNodeButton);
+    }
+
+    if(path.taxon){
+      var taxonReference = document.createElement('p');
+      taxonReference.classList.add("taxon-reference");
+      var taxonLink = document.createElement('a');
+      taxonLink.classList.add("taxon-link");
+      taxonLink.textContent = path.taxon;
+      taxonLink.addEventListener('click', () => {
+        Router.getInstance().setParams({window:"taxons", taxon: path.taxon});
+      });
+      taxonReference.appendChild(taxonLink);
+      pathButtons.appendChild(taxonReference);
     }
 
     var linkButton = document.createElement("a");
@@ -1411,7 +1505,10 @@ class KeyEditor{
     var divContainer = document.createElement("div");
 
     var linkToNodeLabel = document.createElement("p");
+    linkToNodeLabel.classList.add("lng");
+    linkToNodeLabel.setAttribute("lng","52");
     linkToNodeLabel.textContent = "Link to node:";
+
     divContainer.appendChild(linkToNodeLabel);
 
     var comboBox = document.createElement("select");
@@ -1456,8 +1553,9 @@ class KeyEditor{
     divContainer.appendChild(comboBox);
 
     var linkButton = document.createElement("a");
-    linkButton.classList.add("btn","btn-primary", "margin-left");
+    linkButton.classList.add("btn","btn-primary", "margin-left", "lng");
     linkButton.textContent = "Link";
+    linkButton.setAttribute("lng","53");
     linkButton.addEventListener('click', () => {
       var selectedNode = comboBox.value;
       console.log("Selected", selectedNode);
@@ -1468,15 +1566,23 @@ class KeyEditor{
         key.nodes[nodeIndex].paths[pathIndex].node = selectedNode;
       }
       this.createLinkDivContent(key, nodeIndex, pathIndex, containerDiv);
-      session.modal.closeModal();
+      
     });
     divContainer.appendChild(linkButton);
 
     divContainer.appendChild(document.createElement("hr"));
 
+    var newNodeLabel = document.createElement("p");
+    newNodeLabel.classList.add("lng");
+    newNodeLabel.setAttribute("lng","56");
+    newNodeLabel.textContent = "Create new node and link it";
+    divContainer.appendChild(newNodeLabel);
+
     var newNodeButton = document.createElement("a");
     newNodeButton.classList.add("btn", "btn-primary");
     newNodeButton.textContent = "New node";
+    newNodeButton.classList.add("lng");
+    newNodeButton.setAttribute("lng","54");
     newNodeButton.addEventListener('click', () => {
       var newNodeId = generateObjectId(); // Generar nuevo ObjectId
       var newNode = { _id: newNodeId, paths: [] };
@@ -1486,7 +1592,6 @@ class KeyEditor{
       this.createNode(key, key.nodes.length - 1, this.nodeContainer, null, true);
 
       this.createLinkDivContent(key, nodeIndex, pathIndex, containerDiv);
-
       session.modal.closeModal();
     });
     divContainer.appendChild(newNodeButton);
@@ -1494,8 +1599,33 @@ class KeyEditor{
     divContainer.appendChild(document.createElement("hr"));
 
     var linkToTaxonLabel = document.createElement("p");
-    linkToTaxonLabel.textContent = "Reference to taxon:";
+    linkToTaxonLabel.textContent = "Reference to taxon";
+    linkToTaxonLabel.classList.add("lng");
+    linkToTaxonLabel.setAttribute("lng","55");
     divContainer.appendChild(linkToTaxonLabel);
+
+    var taxonInput = document.createElement("input");
+    taxonInput.type = "text";
+    divContainer.appendChild(taxonInput);
+
+    var linkTaxonButton = document.createElement("a");
+    linkTaxonButton.classList.add("btn","btn-primary", "margin-top");
+    linkTaxonButton.textContent = "Link";
+    linkTaxonButton.classList.add("lng");
+    linkTaxonButton.setAttribute("lng","53");
+    linkTaxonButton.addEventListener('click', () => {
+      var taxon = taxonInput.value;
+      if(taxon.isBlank()){
+        delete key.nodes[nodeIndex].paths[pathIndex].taxon;
+        return;
+      } else{
+        key.nodes[nodeIndex].paths[pathIndex].taxon = taxon;
+      }
+      this.createLinkDivContent(key, nodeIndex, pathIndex, containerDiv);
+    });
+    divContainer.appendChild(linkTaxonButton);
+
+    setLangTo(divContainer);
 
     session.modal.loadElement(divContainer);
   }
@@ -1589,11 +1719,7 @@ class TextEditor{
     this.mainContainerElement.appendChild(this.contentContainer);
     this.contentContainer.classList.add("text-editor");
 
-    var cancelButton = document.createElement("a");
-    cancelButton.classList.add("btn","btn-primary","button-cancel");
-    cancelButton.textContent = "X";
-    cancelButton.addEventListener("click", () => this.hideEditor());
-    this.contentContainer.appendChild(cancelButton);
+    
     
     if(this.codeAllowed){
       this.editorElement = document.createElement("textarea");
@@ -1606,6 +1732,12 @@ class TextEditor{
       this.contentContainer.appendChild(this.editorElement);
     }
     this.contentContainer.appendChild(this.editorElement);
+
+    var cancelButton = document.createElement("a");
+    cancelButton.classList.add("btn","btn-primary","button-cancel");
+    cancelButton.textContent = "X";
+    cancelButton.addEventListener("click", () => this.hideEditor());
+    this.contentContainer.appendChild(cancelButton);
 
     var submitButton =  document.createElement("a");
     submitButton.classList.add("btn","btn-primary","btn-submit");
