@@ -1390,7 +1390,7 @@ class KeyEditor{
     deleteNode.classList.add("btn","btn-primary","button-cancel", "button-delete-node");
     deleteNode.textContent = "X";
     deleteNode.addEventListener('click', () => {
-      if(key.nodes.length >= 1) {
+      if(key.nodes.length <= 1) {
         var text = getText(51);
         session.modal.loadAlert( isNullOrEmpty(text) ? "You can't delete the last node." : text);
         return;
