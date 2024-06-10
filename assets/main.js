@@ -1319,7 +1319,6 @@ class KeyEditor{
   }
 
   loadKey(key){
-
     this.keyContainer.innerHTML = "";
 
     var keyInfoDiv = document.createElement("div");
@@ -1374,7 +1373,6 @@ class KeyEditor{
     for (var i = 0; i < key.nodes.length; i++) {
       this.createNode(key, i, nodeContainer);
     }
-    
   }
 
   createNode(key, index, container, previousNodeDiv = null, isEnabled){

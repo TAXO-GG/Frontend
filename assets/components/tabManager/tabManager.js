@@ -58,7 +58,7 @@ class Tab{
 
         this.tabReference.addEventListener("click", function(e){
             if (e.target.classList.contains("closeTab") || this.tabReference.classList.contains("active")) return;
-            TabManager.getInstance().setActiveTab(this)
+            TabManager.getInstance().setActiveTab(this);
         }.bind(this));
         this.tabReference.getElementsByClassName("closeTab")[0].addEventListener("click", async function(e){
             await this.close();
@@ -76,15 +76,19 @@ class Tab{
             p.textContent = this.title;
         }
         this.tabContentContainerReference.appendChild(p);
-
         if(this.createContentFunction && this.createContentFunction instanceof Function && this.tabContentContainerReference){
             await this.createContentFunction(this.tabContentContainerReference, this.data);
         }
-
         setLangTo(this.tabContentContainerReference);
     }
 
     async setActive(){
+        if(TabManager.getInstance().activeTab != null){
+            await TabManager.getInstance().activeTab.removeActive();
+        }
+
+        TabManager.getInstance().activeTab = this;
+
         this.tabReference.classList.add("active");
         this.tabContentContainerReference.classList.remove("none");
 
@@ -117,14 +121,14 @@ class Tab{
         removeOpenUserTab(this);
         let activeTab = TabManager.getInstance().getActiveTab();
         delete session.tabManager.tabReferences[this.id];
+        this.tabsContainerReference.removeChild(this.tabReference);
+        this.tabsContentContainerReference.removeChild(this.tabContentContainerReference);
         if(activeTab != null){
             if(this.id == activeTab.id){
                 var lastTab = TabManager.getInstance().getLastTab();
                 if(lastTab!=null) await lastTab.setActive();
             }
         }
-        this.tabsContainerReference.removeChild(this.tabReference);
-        this.tabsContentContainerReference.removeChild(this.tabContentContainerReference);
     }
 }
 
@@ -177,8 +181,8 @@ class TabManager{
             return;
         }
         if(this.activeTab!=null) await this.activeTab.removeActive();
-        this.activeTab = tab;
         await tab.setActive();
+        this.activeTab = tab;
     }
 
     getActiveTab(){

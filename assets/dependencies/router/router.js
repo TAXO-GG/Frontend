@@ -70,7 +70,7 @@ class Router {
                 await TabManager.getInstance().createTab('taxons', 3, params, createTaxonsTabContent, updateTaxonSearch);
                 break;
             case "keys":
-                var tab = await TabManager.getInstance().createTab('keys', 4, {window: 'keys'}, createKeysTabContent, updateUserKeys);
+                var tab = await TabManager.getInstance().createTab('keys', 4, {window: 'keys'}, createKeysTabContent);//, updateUserKeys);
                 if(tab) addOpenUserTab(tab);
                 break;
             case "id":
