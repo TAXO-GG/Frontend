@@ -28,6 +28,24 @@ function removeOpenUserTab(tab) {
  *                       *
  * * * * * * * * * * * * */
 
+document.addEventListener('click', function(event) {
+  handleClick(event);
+});
+
+function handleClick(event) {
+  const clickedElement = event.target;
+  
+  if (clickedElement.tagName === 'IMG') {
+      if (clickedElement.classList.contains('trigger')) {
+          handleTriggerImageClick(clickedElement);
+      }
+  }
+}
+
+function handleTriggerImageClick(imgElement) {
+  session.modal.loadElement(imgElement);
+}
+
 function cloneObject(obj) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
