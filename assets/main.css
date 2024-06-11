@@ -6,6 +6,11 @@ body {
     background-color: var(--bg-primary);
 }
 
+img.trigger:hover {
+    cursor: pointer;
+    box-shadow: var(--color-secondary) 0px 0px 0px 2px;
+}
+
 h2{
     color: var(--border-dark);
 }

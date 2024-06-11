@@ -43,7 +43,26 @@ function handleClick(event) {
 }
 
 function handleTriggerImageClick(imgElement) {
-  session.modal.loadElement(imgElement);
+  imgContainer = document.createElement('div');
+
+  if(imgElement.hasAttribute('title')){
+    console.log(imgElement.title);
+    title = document.createElement('h2');
+    title.textContent = imgElement.title;
+    imgContainer.appendChild(title);
+  }
+
+  imgClone = imgElement.cloneNode(true);
+  imgClone.classList.remove('trigger');
+  imgContainer.appendChild(imgClone);
+
+  if(imgElement.hasAttribute('alt')){
+    text = document.createElement('p');
+    text.textContent = imgElement.alt;
+    imgContainer.appendChild(text);
+  }
+
+  session.modal.loadElement(imgContainer);
 }
 
 function cloneObject(obj) {
