@@ -13,14 +13,23 @@
     background-color: var(--bg-primary);
     flex-direction: column;
     border-radius: 1rem;
+    max-width: calc(100% - 2rem) !important;
+    max-height: calc(100% - 2rem) !important;
+    flex-wrap: nowrap;
+}
+
+#modal-content img {
+    max-width: 100% !important;
 }
 
 #modal-content {
     display: flex;
     border-radius: 1rem;
     flex-direction: column;
+    max-width: 100%;
     gap: 1rem;
     background-color: var(--bg-primary);
+    overflow-x: auto;
 }
 
 #modal-content > * {
