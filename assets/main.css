@@ -547,6 +547,19 @@ p.editable {
     display: block;
 }
 
+.img-container {
+    display: flex;
+    height: 200px;
+    padding: 1rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-top: 1rem;
+    flex-direction: row;
+    column-gap: 1rem;
+    background-color: var(--bg-secondary);
+}
+
 @media (max-width: 1200px) {
 
     .twoColumns {
